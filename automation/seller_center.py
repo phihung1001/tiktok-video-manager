@@ -148,11 +148,14 @@ class SellerCenter:
         self._click([self._text_exact(name), self._text_contains(name)])
 
     def click_next(self):
-        self._click([
-            (By.XPATH, '//button[@data-tid="m4b_button" and normalize-space(.)="Tiếp" and not(@disabled)]'),
-            (By.XPATH, '//button[normalize-space(.)="Tiếp" and not(@disabled)]'),
-            (By.XPATH, '//*[@role="button" and normalize-space(.)="Tiếp"]')
-        ])
+        try:
+            self._click_shadow_button(("Tiếp",), timeout=2)
+        except TimeoutException:
+            self._click([
+                (By.XPATH, '//button[@data-tid="m4b_button" and normalize-space(.)="Tiếp" and not(@disabled)]'),
+                (By.XPATH, '//button[normalize-space(.)="Tiếp" and not(@disabled)]'),
+                (By.XPATH, '//*[@role="button" and normalize-space(.)="Tiếp"]')
+            ], timeout=10)
 
     def upload_file(self, file_path):
         self.upload_files([file_path])
@@ -245,9 +248,11 @@ class SellerCenter:
             body = self.driver.find_element(By.TAG_NAME, "body").text
             if any(x in body for x in errors):
                 return "invalid"
-            if self._shadow_button_ready(("Tiếp theo", "Xác nhận")):
-                return "valid"
-            time.sleep(0.05)
+            if self._shadow_button_ready(("Xác nhận",)):
+                return "confirm"
+            if self._shadow_button_ready(("Tiếp theo",)):
+                return "next"
+            time.sleep(0.25)
         raise TimeoutException("Upload/validation quá thời gian chờ.")
 
     def delete_invalid_video(self):
@@ -275,10 +280,80 @@ class SellerCenter:
                     pass
 
     def click_confirm(self):
-        self._click_shadow_button(("Xác nhận",), timeout=900)
+        try:
+            def click_ks_confirm(driver):
+                return bool(driver.execute_script(
+                    """
+                    const hosts = Array.from(document.querySelectorAll('ks-button-1-1-11'));
+                    for (const host of hosts) {
+                        const label = (host.textContent || '').replace(/\\s+/g, ' ').trim();
+                        const button = host.shadowRoot?.querySelector('button');
+                        if (label === 'Xác nhận' && button && !button.disabled &&
+                            button.getAttribute('aria-disabled') !== 'true') {
+                            button.scrollIntoView({block: 'center'});
+                            button.click();
+                            return true;
+                        }
+                    }
+                    return false;
+                    """
+                ))
+
+            WebDriverWait(self.driver, 30, poll_frequency=FAST_POLL).until(click_ks_confirm)
+        except TimeoutException:
+            try:
+                self._click_shadow_button(("Xác nhận",), timeout=10)
+            except TimeoutException:
+                self._click([
+                    (By.XPATH, '//button[normalize-space(.)="Xác nhận" and not(@disabled)]'),
+                    (By.XPATH, '//*[@role="button" and normalize-space(.)="Xác nhận" and not(@aria-disabled="true")]'),
+                ], timeout=10)
 
     def fill_description(self, description):
         if not description:
+            return
+        filled = self.driver.execute_script(
+            """
+            const value = arguments[0];
+            function visible(node) {
+                const rect = node.getBoundingClientRect();
+                const style = getComputedStyle(node);
+                return rect.width > 0 && rect.height > 0 &&
+                    style.display !== 'none' && style.visibility !== 'hidden';
+            }
+            function setValue(node) {
+                node.focus();
+                if (node.isContentEditable) {
+                    node.textContent = value;
+                } else {
+                    const proto = node instanceof HTMLTextAreaElement
+                        ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+                    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+                    if (setter) setter.call(node, value);
+                    else node.value = value;
+                }
+                node.dispatchEvent(new InputEvent('input', {bubbles: true, composed: true, inputType: 'insertText', data: value}));
+                node.dispatchEvent(new Event('change', {bubbles: true, composed: true}));
+                return true;
+            }
+            function scan(root) {
+                for (const node of root.querySelectorAll('textarea, input, [contenteditable="true"]')) {
+                    const placeholder = node.getAttribute('placeholder') || '';
+                    if (visible(node) && (node.isContentEditable ||
+                        placeholder.includes('Nhập văn bản nội dung sáng tạo'))) {
+                        return setValue(node);
+                    }
+                }
+                for (const host of root.querySelectorAll('*')) {
+                    if (host.shadowRoot && scan(host.shadowRoot)) return true;
+                }
+                return false;
+            }
+            return scan(document);
+            """,
+            description
+        )
+        if filled:
             return
         candidates = [
             (By.XPATH, '//textarea'),
@@ -356,8 +431,9 @@ class SellerCenter:
         if result == "invalid":
             return [("invalid", "TikTok báo batch có video không hợp lệ; batch đã dừng.") for _ in file_paths]
 
-        self.click_next_step()
-        self._click_shadow_button(("Xác nhận",), timeout=upload_timeout)
+        if result == "next":
+            self.click_next_step()
+        self.click_confirm()
         self.fill_description(description)
         self.set_public_profile(public_profile)
         self.click_save()

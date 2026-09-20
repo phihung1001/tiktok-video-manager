@@ -5,7 +5,7 @@
   "product_name": "",
   "description": "hehehee test nbha",
   "public_profile": true,
-  "batch_size": 50,
+  "batch_size": 1,
   "upload_timeout_seconds": 900,
   "max_file_size_mb": 500,
   "video_rules": {

@@ -1,17 +1,33 @@
 import os
 import shutil
+from datetime import datetime
 from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+def _profile_is_locked(profile: Path):
+    return any((profile / name).exists() for name in (
+        "SingletonLock", "SingletonCookie", "SingletonSocket"
+    ))
+
+def _session_profile(root: Path):
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    profile = root / f"browser-profile-session-{stamp}"
+    profile.mkdir(parents=True, exist_ok=False)
+    return profile
+
 def create_driver(root: Path):
     profile = root / "browser-profile"
-    profile.mkdir(exist_ok=True)
+    profile.mkdir(parents=True, exist_ok=True)
+    if _profile_is_locked(profile):
+        profile = _session_profile(root)
 
     options = Options()
     options.add_argument(f"--user-data-dir={profile}")
     options.add_argument("--start-maximized")
     options.add_argument("--disable-notifications")
+    options.add_argument("--no-first-run")
+    options.add_argument("--no-default-browser-check")
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
     # Ignore an old chromedriver in PATH and let Selenium Manager match Chrome.
