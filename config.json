@@ -1,0 +1,26 @@
+{
+  "seller_center_url": "https://seller-vn.tiktok.com/account/login",
+  "video_manager_url": "https://seller-vn.tiktok.com/ads-creation/manage-analyze?mpa=1&reporting_type=video",
+  "account_name": "HT88 - Thời trang nam",
+  "product_name": "",
+  "description": "hehehee test nbha",
+  "public_profile": true,
+  "batch_size": 50,
+  "upload_timeout_seconds": 900,
+  "max_file_size_mb": 500,
+  "video_rules": {
+    "max_file_size_mb": 500.0,
+    "min_duration_seconds": 5.0,
+    "max_duration_seconds": 600.0,
+    "aspect_tolerance": 0.005
+  },
+  "supported_extensions": [
+    ".mp4",
+    ".mov",
+    ".mpeg",
+    ".avi"
+  ],
+  "folder": "D:\\video toptop",
+  "language": "vi",
+  "theme": "light"
+}

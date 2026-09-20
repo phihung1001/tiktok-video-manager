@@ -1,0 +1,364 @@
+import time
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
+FAST_POLL = 0.05
+
+class SellerCenter:
+    def __init__(self, driver, emit, wait_control):
+        self.driver = driver
+        self.emit = emit
+        self.wait_control = wait_control
+        self.wait = WebDriverWait(driver, 20, poll_frequency=FAST_POLL)
+
+    def _checkpoint(self):
+        self.wait_control()
+
+    def open(self, url):
+        self.driver.get(url)
+
+    def open_video_manager(self, url):
+        self.emit({"type": "info", "message": "Đã đăng nhập. Đang mở trang quản lý video..."})
+        self.driver.get(url)
+        self._visible([
+            (By.CSS_SELECTOR, 'button[data-testid="creation-page-add-anchor-cxMyKe"]'),
+            (By.CSS_SELECTOR, 'button[data-tid="m4b_dropdown_button"]'),
+            (By.XPATH, '//button[normalize-space(.)="Thêm"]')
+        ], timeout=30)
+
+    def ensure_logged_in(self, timeout=300):
+        # Chỉ chờ người dùng hoàn tất login/2FA/CAPTCHA nếu TikTok yêu cầu.
+        end = time.time() + timeout
+        informed = False
+        while time.time() < end:
+            self._checkpoint()
+            body = self.driver.find_element(By.TAG_NAME, "body").text.lower()
+            login_markers = ("đăng nhập", "log in", "login")
+            seller_markers = ("seller center", "trung tâm nhà bán", "thêm")
+            if any(x in body for x in seller_markers) and not (
+                "đăng nhập vào tiktok shop" in body or "log in to tiktok shop" in body
+            ):
+                return
+            if not informed:
+                self.emit({"type":"info","message":"Nếu Seller Center yêu cầu đăng nhập/2FA/CAPTCHA, hãy hoàn tất trên Chrome. Tool sẽ tự tiếp tục."})
+                informed = True
+            time.sleep(2)
+        raise TimeoutException("Không phát hiện Seller Center đã đăng nhập sau 5 phút.")
+
+    def _visible(self, locators, timeout=15):
+        last = None
+        for by, value in locators:
+            self._checkpoint()
+            try:
+                return WebDriverWait(self.driver, timeout, poll_frequency=FAST_POLL).until(
+                    EC.visibility_of_element_located((by, value))
+                )
+            except Exception as e:
+                last = e
+        raise TimeoutException(f"Không tìm thấy phần tử. Locators={locators}") from last
+
+    def _click(self, locators, timeout=15):
+        last = None
+        for by, value in locators:
+            self._checkpoint()
+            try:
+                el = WebDriverWait(self.driver, timeout, poll_frequency=FAST_POLL).until(
+                    EC.element_to_be_clickable((by, value))
+                )
+                self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+                try:
+                    el.click()
+                except Exception:
+                    self.driver.execute_script("arguments[0].click();", el)
+                return el
+            except Exception as e:
+                last = e
+        raise TimeoutException(f"Không click được phần tử. Locators={locators}") from last
+
+    @staticmethod
+    def _text_exact(text):
+        safe = text.replace('"', '\\"')
+        return (By.XPATH, f'//*[normalize-space(text())="{safe}"]')
+
+    @staticmethod
+    def _text_contains(text):
+        safe = text.replace('"', '\\"')
+        return (By.XPATH, f'//*[contains(normalize-space(.),"{safe}")]')
+
+    def click_add(self):
+        self._click([
+            (By.CSS_SELECTOR, 'button[data-testid="creation-page-add-anchor-cxMyKe"]'),
+            (By.CSS_SELECTOR, 'button[data-tid="m4b_dropdown_button"]'),
+            (By.XPATH, '//button[normalize-space(.)="Thêm"]'),
+            (By.XPATH, '//*[@role="button" and normalize-space(.)="Thêm"]'),
+            self._text_exact("Thêm"),
+        ], timeout=10)
+
+    def click_upload_video(self):
+        self._click([
+            (By.CSS_SELECTOR, '[role="menuitem"][data-testid="operation-creative-hub-f2GFp9-upload_video"]'),
+            (By.CSS_SELECTOR, '[role="menuitem"][data-tid="m4b_dropdown_menu_item"]'),
+            self._text_exact("Tải video lên"),
+            (By.XPATH, '//*[contains(normalize-space(.),"Tải video lên")]')
+        ], timeout=10)
+
+    def select_account(self, name):
+        normalized = " ".join(name.split())
+        locator = (By.XPATH, f'//*[normalize-space(text())="{normalized}" or contains(normalize-space(text()),"{normalized}")]')
+        try:
+            if WebDriverWait(self.driver, 3, poll_frequency=FAST_POLL).until(
+                lambda driver: any(element.is_displayed() for element in driver.find_elements(*locator))
+            ):
+                return
+        except TimeoutException:
+            pass
+
+        # Mở combobox/account picker.
+        self._click([
+            (By.XPATH, '//*[contains(text(),"Tài khoản TikTok")]/following::*[@role="combobox"][1]'),
+            (By.CSS_SELECTOR, '[role="combobox"]'),
+            (By.XPATH, '//input[contains(@placeholder,"Tài khoản")]')
+        ])
+        try:
+            self._click([self._text_exact(normalized), self._text_contains(normalized)])
+        except TimeoutException as error:
+            raise TimeoutException(
+                f"Không tìm thấy tài khoản TikTok '{normalized}'. Hãy kiểm tra account_name trong config.json."
+            ) from error
+
+    def choose_product(self, name):
+        if not name:
+            return
+        # Product UI có thể khác theo Seller Center; ưu tiên label/placeholder.
+        candidates = self.driver.find_elements(
+            By.XPATH,
+            '//input[contains(@placeholder,"sản phẩm") or contains(@placeholder,"Sản phẩm") or contains(@placeholder,"product")]'
+        )
+        if candidates:
+            el = next((x for x in candidates if x.is_displayed()), None)
+            if el:
+                el.clear()
+                el.send_keys(name)
+                time.sleep(.8)
+                self._click([self._text_exact(name), self._text_contains(name)])
+                return
+        # Nếu option đã hiện trực tiếp.
+        self._click([self._text_exact(name), self._text_contains(name)])
+
+    def click_next(self):
+        self._click([
+            (By.XPATH, '//button[@data-tid="m4b_button" and normalize-space(.)="Tiếp" and not(@disabled)]'),
+            (By.XPATH, '//button[normalize-space(.)="Tiếp" and not(@disabled)]'),
+            (By.XPATH, '//*[@role="button" and normalize-space(.)="Tiếp"]')
+        ])
+
+    def upload_file(self, file_path):
+        self.upload_files([file_path])
+
+    def upload_files(self, file_paths):
+        self._checkpoint()
+        el = WebDriverWait(self.driver, 20, poll_frequency=FAST_POLL).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="file"]'))
+        )
+        self.driver.execute_script(
+            "arguments[0].multiple = true; arguments[0].setAttribute('multiple', '');", el
+        )
+        el.send_keys("\n".join(str(path) for path in file_paths))
+
+    def has_visible_file_input(self):
+        return any(
+            element.is_displayed()
+            for element in self.driver.find_elements(By.CSS_SELECTOR, 'input[type="file"]')
+        )
+
+    def _shadow_button_ready(self, labels):
+        return bool(self.driver.execute_script(
+            r"""
+            const labels = arguments[0];
+            function scan(root) {
+                for (const host of root.querySelectorAll('*')) {
+                    const text = (host.innerText || host.textContent || '').replace(/\s+/g, ' ').trim();
+                    if (labels.some(label => text === label || text.includes(label))) {
+                        const button = host.shadowRoot?.querySelector('button, [role="button"]') ||
+                            (host.matches('button, [role="button"]') ? host : null);
+                        if (button) {
+                            const rect = button.getBoundingClientRect();
+                            const disabled = button.disabled === true || button.hasAttribute('disabled') ||
+                                button.getAttribute('aria-disabled') === 'true';
+                            if (!disabled && rect.width > 0 && rect.height > 0) return true;
+                        }
+                    }
+                    if (host.shadowRoot && scan(host.shadowRoot)) return true;
+                }
+                return false;
+            }
+            return scan(document);
+            """,
+            list(labels)
+        ))
+
+    def _click_shadow_button(self, labels, timeout=900):
+        self._checkpoint()
+        def ready(driver):
+            try:
+                return self._shadow_button_ready(labels)
+            except Exception:
+                return False
+        WebDriverWait(self.driver, timeout, poll_frequency=FAST_POLL).until(ready)
+        clicked = self.driver.execute_script(
+            r"""
+            const labels = arguments[0];
+            function scan(root) {
+                for (const host of root.querySelectorAll('*')) {
+                    const text = (host.innerText || host.textContent || '').replace(/\s+/g, ' ').trim();
+                    if (labels.some(label => text === label || text.includes(label))) {
+                        const button = host.shadowRoot?.querySelector('button, [role="button"]') ||
+                            (host.matches('button, [role="button"]') ? host : null);
+                        if (button && !button.disabled && !button.hasAttribute('disabled') &&
+                            button.getAttribute('aria-disabled') !== 'true') {
+                            button.scrollIntoView({block: 'center'});
+                            button.click();
+                            return true;
+                        }
+                    }
+                    if (host.shadowRoot && scan(host.shadowRoot)) return true;
+                }
+                return false;
+            }
+            return scan(document);
+            """,
+            list(labels)
+        )
+        if not clicked:
+            raise TimeoutException(f"Không click được nút {', '.join(labels)} ở trạng thái sẵn sàng.")
+
+    def click_next_step(self):
+        self._click_shadow_button(("Tiếp theo",), timeout=900)
+
+    def wait_upload_result(self, timeout=900):
+        end = time.time() + timeout
+        errors = ("Không được hỗ trợ bởi TikTok", "Không được hỗ trợ", "không hợp lệ")
+        while time.time() < end:
+            self._checkpoint()
+            body = self.driver.find_element(By.TAG_NAME, "body").text
+            if any(x in body for x in errors):
+                return "invalid"
+            if self._shadow_button_ready(("Tiếp theo", "Xác nhận")):
+                return "valid"
+            time.sleep(0.05)
+        raise TimeoutException("Upload/validation quá thời gian chờ.")
+
+    def delete_invalid_video(self):
+        # Ưu tiên aria/title/text có nghĩa xóa. Không click button cuối cùng một cách mù quáng.
+        locators = [
+            (By.CSS_SELECTOR, 'button[aria-label*="xóa" i]'),
+            (By.CSS_SELECTOR, 'button[aria-label*="delete" i]'),
+            (By.CSS_SELECTOR, 'button[title*="xóa" i]'),
+            (By.CSS_SELECTOR, 'button[title*="delete" i]'),
+            (By.XPATH, '//*[@role="button" and (.//*[contains(@class,"trash")] or .//*[contains(@class,"delete")])]'),
+            (By.XPATH, '//button[.//*[name()="svg"] and (@aria-label="Xóa" or @aria-label="Delete")]')
+        ]
+        self._click(locators, timeout=3)
+        time.sleep(.5)
+
+        # Nếu có confirm modal.
+        for text in ("Xóa", "Delete", "Xác nhận"):
+            els = self.driver.find_elements(By.XPATH, f'//button[normalize-space(.)="{text}" and not(@disabled)]')
+            visible = [e for e in els if e.is_displayed()]
+            if visible:
+                try:
+                    visible[-1].click()
+                    break
+                except Exception:
+                    pass
+
+    def click_confirm(self):
+        self._click_shadow_button(("Xác nhận",), timeout=900)
+
+    def fill_description(self, description):
+        if not description:
+            return
+        candidates = [
+            (By.XPATH, '//textarea'),
+            (By.XPATH, '//input[contains(@placeholder,"mô tả") or contains(@placeholder,"Mô tả")]'),
+            (By.XPATH, '//*[contains(@placeholder,"Nhập văn bản nội dung sáng tạo")]'),
+            (By.XPATH, '//*[@contenteditable="true"]')
+        ]
+        el = self.driver.execute_script(
+            """
+            function find(root) {
+                for (const node of root.querySelectorAll('*')) {
+                    const placeholder = node.getAttribute && node.getAttribute('placeholder');
+                    const editable = node.getAttribute && node.getAttribute('contenteditable');
+                    if ((placeholder && placeholder.includes('Nhập văn bản nội dung sáng tạo')) || editable === 'true') {
+                        const style = getComputedStyle(node);
+                        if (style.display !== 'none' && style.visibility !== 'hidden') return node;
+                    }
+                    if (node.shadowRoot) {
+                        const nested = find(node.shadowRoot);
+                        if (nested) return nested;
+                    }
+                }
+                return null;
+            }
+            return find(document);
+            """
+        ) or self._visible(candidates)
+        el.clear()
+        el.send_keys(description)
+
+    def set_public_profile(self, enabled):
+        text = "Hiển thị trên hồ sơ TikTok công khai"
+        labels = self.driver.find_elements(By.XPATH, f'//*[normalize-space(.)="{text}"]')
+        for label in labels:
+            if not label.is_displayed():
+                continue
+            # Tìm checkbox trong/near label.
+            boxes = label.find_elements(By.XPATH, './/input[@type="checkbox"]')
+            if not boxes:
+                boxes = label.find_elements(By.XPATH, 'preceding::input[@type="checkbox"][1]')
+            if boxes:
+                box = boxes[0]
+                if box.is_selected() != enabled:
+                    self.driver.execute_script("arguments[0].click();", box)
+                return
+        # Nếu DOM custom, thử checkbox duy nhất trong vùng form.
+        boxes = [b for b in self.driver.find_elements(By.CSS_SELECTOR, 'input[type="checkbox"]') if b.is_displayed()]
+        if len(boxes) == 1 and boxes[0].is_selected() != enabled:
+            self.driver.execute_script("arguments[0].click();", boxes[0])
+
+    def click_save(self):
+        self._click([
+            (By.XPATH, '//button[normalize-space(.)="Lưu" and not(@disabled)]'),
+            self._text_exact("Lưu")
+        ], timeout=30)
+        time.sleep(1.5)
+
+    def upload_one(self, file_path, account, product, description, public_profile, upload_timeout=900):
+        return self.upload_many([file_path], account, product, description, public_profile, upload_timeout)[0]
+
+    def upload_many(self, file_paths, account, product, description, public_profile, upload_timeout=900):
+        self.click_add()
+        self.click_upload_video()
+
+        if self.has_visible_file_input():
+            self.upload_files(file_paths)
+            self.click_next()
+        else:
+            self.select_account(account)
+            self.choose_product(product)
+            self.click_next()
+            self.upload_files(file_paths)
+
+        result = self.wait_upload_result(timeout=upload_timeout)
+        if result == "invalid":
+            return [("invalid", "TikTok báo batch có video không hợp lệ; batch đã dừng.") for _ in file_paths]
+
+        self.click_next_step()
+        self._click_shadow_button(("Xác nhận",), timeout=upload_timeout)
+        self.fill_description(description)
+        self.set_public_profile(public_profile)
+        self.click_save()
+        return [("success", "Đã upload và lưu.") for _ in file_paths]

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+browser-profile/
+browser-profile-*/
+state.json
+logs/
+
+browser-profile-worker-*/
