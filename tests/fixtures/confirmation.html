@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<title>Local confirmation test — no network or uploads</title>
+<style>
+  body { font-family: sans-serif; }
+  section { padding: 20px; border: 1px solid #ccc; }
+  textarea { width: 400px; height: 100px; }
+  ks-button-1-1-11, ks-button-9-9-9, test-shell, test-editor { display: block; }
+</style>
+<body>
+<script>
+for (const tag of ['ks-button-1-1-11', 'ks-button-9-9-9']) {
+  customElements.define(tag, class extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({mode: 'open'}).innerHTML =
+        '<button type="button" part="base"><slot></slot></button>';
+    }
+  });
+}
+window.setup = function(options = {}) {
+  document.querySelectorAll('main, section, test-shell').forEach(node => node.remove());
+  window.confirmClicks = 0;
+  window.inputEvents = 0;
+  const background = document.createElement('main');
+  background.innerHTML = '<textarea placeholder="mô tả">Do not edit</textarea><button>Xác nhận</button>';
+  document.body.append(background);
+  const form = document.createElement('section');
+  form.id = 'form';
+  form.hidden = !options.backgroundForm;
+  form.innerHTML = '<h2>Tải video lên</h2><test-editor></test-editor><button>Lưu</button>';
+  const editorRoot = options.lightEditor ? form.querySelector('test-editor') :
+    form.querySelector('test-editor').attachShadow({mode: 'open'});
+  editorRoot.innerHTML = options.contentEditable ?
+    '<div contenteditable="true" aria-label="Nhập văn bản nội dung sáng tạo" style="min-height:80px"></div>' :
+    '<textarea placeholder="Nhập văn bản nội dung sáng tạo"></textarea>';
+  window.editor = editorRoot.querySelector('textarea, [contenteditable]');
+  editor.addEventListener('input', () => window.inputEvents++);
+  document.body.append(form);
+  const wizard = document.createElement('section');
+  wizard.id = 'wizard';
+  wizard.innerHTML = '<h2>Tải video lên</h2><p>Bước 3/3: Hoàn tất việc tải lên</p>' +
+    '<div>Đã tải 10 video lên.</div><footer><button>Quay lại</button></footer>';
+  let container = document.body;
+  if (options.nested) {
+    const shell = document.createElement('test-shell');
+    document.body.append(shell);
+    container = shell.attachShadow({mode: 'open'});
+  }
+  container.append(wizard);
+  const footer = wizard.querySelector('footer');
+  const tag = options.nativeButton ? 'button' : (options.version || 'ks-button-1-1-11');
+  const host = document.createElement(tag);
+  host.className = 'KsButton';
+  host.textContent = 'Xác nhận';
+  const old = host.cloneNode(true);
+  old.hidden = true; // First match must never win over the visible button.
+  footer.append(old, host);
+  window.confirmHost = host;
+  window.confirmButton = host.shadowRoot ? host.shadowRoot.querySelector('button') : host;
+  if (options.hostDisabled) host.setAttribute('disabled', '');
+  if (options.buttonDisabled) confirmButton.disabled = true;
+  if (options.duplicate) {
+    const duplicate = document.createElement('button');
+    duplicate.textContent = 'Xác nhận';
+    footer.append(duplicate);
+  }
+  confirmButton.addEventListener('click', event => {
+    // Old JavaScript button.click() must not pass this regression test.
+    if (!event.isTrusted) throw new Error('Expected a native WebDriver click');
+    window.confirmClicks++;
+    if (options.noTransition) return;
+    setTimeout(() => {
+      wizard.remove();
+      setTimeout(() => { form.hidden = false; }, options.editorDelay || 0);
+    }, options.transitionDelay || 0);
+  });
+};
+</script>
+</body>
+</html>

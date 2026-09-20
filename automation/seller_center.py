@@ -1,9 +1,14 @@
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import (
+    ElementClickInterceptedException, ElementNotInteractableException,
+    StaleElementReferenceException, TimeoutException,
+)
+from .confirm_form import CONFIRM_FORM_SNAPSHOT, CONFIRM_POINTER_SAFE, SET_DESCRIPTION
 
 FAST_POLL = 0.05
 
@@ -369,110 +374,85 @@ class SellerCenter:
                 except Exception:
                     pass
 
-    def click_confirm(self):
-        try:
-            def click_ks_confirm(driver):
-                return bool(driver.execute_script(
-                    """
-                    const hosts = Array.from(document.querySelectorAll('ks-button-1-1-11'));
-                    for (const host of hosts) {
-                        const label = (host.textContent || '').replace(/\\s+/g, ' ').trim();
-                        const button = host.shadowRoot?.querySelector('button');
-                        if (label === 'Xác nhận' && button && !button.disabled &&
-                            button.getAttribute('aria-disabled') !== 'true') {
-                            button.scrollIntoView({block: 'center'});
-                            button.click();
-                            return true;
-                        }
-                    }
-                    return false;
-                    """
-                ))
+    def _confirm_form_snapshot(self):
+        snapshot = self.driver.execute_script(CONFIRM_FORM_SNAPSHOT)
+        return snapshot if isinstance(snapshot, dict) else {}
 
-            WebDriverWait(self.driver, 30, poll_frequency=FAST_POLL).until(click_ks_confirm)
-        except TimeoutException:
+    def click_confirm(self, timeout=30):
+        """A click is not success: wait for the actual description form as well."""
+        clicked = False
+        snapshot = {}
+        click_error = ""
+        started = last_log = time.monotonic()
+        self.emit({"type": "info", "message": "Chờ nút Xác nhận và màn hình mô tả..."})
+
+        def ready(driver):
+            nonlocal clicked, snapshot, last_log, click_error
+            self._checkpoint()
+            now = time.monotonic()
+            if now - last_log >= 10:
+                if clicked:
+                    phase = "Chờ chuyển sang màn hình mô tả"
+                elif snapshot.get("readyConfirmCount", 0):
+                    phase = "Đã thấy nút Xác nhận; chờ click không bị chặn"
+                else:
+                    phase = "Chờ nút Xác nhận sẵn sàng"
+                self.emit({"type": "info", "message": f"{phase} ({now - started:.0f}/{timeout:g}s)"})
+                last_log = now
             try:
-                self._click_shadow_button(("Xác nhận",), timeout=10)
-            except TimeoutException:
-                self._click([
-                    (By.XPATH, '//button[normalize-space(.)="Xác nhận" and not(@disabled)]'),
-                    (By.XPATH, '//*[@role="button" and normalize-space(.)="Xác nhận" and not(@aria-disabled="true")]'),
-                ], timeout=10)
+                snapshot = self._confirm_form_snapshot()
+                if snapshot.get("formReady") and snapshot.get("description") is not None:
+                    return True
+                button = snapshot.get("confirm")
+                if not clicked and button is not None:
+                    # Native click checks interactability and produces a real pointer event.
+                    # Retry only rejected/stale clicks; do not spam an accepted confirmation.
+                    try:
+                        button.click()
+                    except ElementClickInterceptedException:
+                        if not driver.execute_script(CONFIRM_POINTER_SAFE, button):
+                            raise
+                        ActionChains(driver).move_to_element(button).click().perform()
+                        self.emit({"type": "info", "message": "Đã click chuột vào nút Xác nhận trong Shadow DOM."})
+                    clicked = True
+                    self.emit({"type": "info", "message": "Đã nhấn Xác nhận; đang chờ ô mô tả xuất hiện."})
+            except (StaleElementReferenceException, ElementClickInterceptedException, ElementNotInteractableException) as error:
+                click_error = f"{type(error).__name__}: {(error.msg or str(error)).splitlines()[0]}"[:300]
+                return False
+            return False
 
-    def fill_description(self, description):
+        try:
+            WebDriverWait(self.driver, timeout, poll_frequency=0.1).until(ready)
+        except TimeoutException as error:
+            phase = ("Đã nhấn Xác nhận nhưng chưa chuyển sang màn hình mô tả"
+                     if clicked else "Chưa nhấn được đúng nút Xác nhận đang hiển thị")
+            details = (f"bước 3/3={snapshot.get('step3Visible')}, "
+                       f"nút xác nhận={snapshot.get('confirmCount', 0)}, "
+                       f"nút sẵn sàng={snapshot.get('readyConfirmCount', 0)}, "
+                       f"ô mô tả={snapshot.get('descriptionCount', 0)}")
+            raise TimeoutException(f"{phase} sau {timeout:g}s ({details}). {click_error}") from error
+        self.emit({"type": "info", "message": "Đã chuyển sang màn hình mô tả."})
+
+    def fill_description(self, description, timeout=15):
         if not description:
             return
-        filled = self.driver.execute_script(
-            """
-            const value = arguments[0];
-            function visible(node) {
-                const rect = node.getBoundingClientRect();
-                const style = getComputedStyle(node);
-                return rect.width > 0 && rect.height > 0 &&
-                    style.display !== 'none' && style.visibility !== 'hidden';
-            }
-            function setValue(node) {
-                node.focus();
-                if (node.isContentEditable) {
-                    node.textContent = value;
-                } else {
-                    const proto = node instanceof HTMLTextAreaElement
-                        ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
-                    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-                    if (setter) setter.call(node, value);
-                    else node.value = value;
-                }
-                node.dispatchEvent(new InputEvent('input', {bubbles: true, composed: true, inputType: 'insertText', data: value}));
-                node.dispatchEvent(new Event('change', {bubbles: true, composed: true}));
-                return true;
-            }
-            function scan(root) {
-                for (const node of root.querySelectorAll('textarea, input, [contenteditable="true"]')) {
-                    const placeholder = node.getAttribute('placeholder') || '';
-                    if (visible(node) && (node.isContentEditable ||
-                        placeholder.includes('Nhập văn bản nội dung sáng tạo'))) {
-                        return setValue(node);
-                    }
-                }
-                for (const host of root.querySelectorAll('*')) {
-                    if (host.shadowRoot && scan(host.shadowRoot)) return true;
-                }
-                return false;
-            }
-            return scan(document);
-            """,
-            description
-        )
-        if filled:
-            return
-        candidates = [
-            (By.XPATH, '//textarea'),
-            (By.XPATH, '//input[contains(@placeholder,"mô tả") or contains(@placeholder,"Mô tả")]'),
-            (By.XPATH, '//*[contains(@placeholder,"Nhập văn bản nội dung sáng tạo")]'),
-            (By.XPATH, '//*[@contenteditable="true"]')
-        ]
-        el = self.driver.execute_script(
-            """
-            function find(root) {
-                for (const node of root.querySelectorAll('*')) {
-                    const placeholder = node.getAttribute && node.getAttribute('placeholder');
-                    const editable = node.getAttribute && node.getAttribute('contenteditable');
-                    if ((placeholder && placeholder.includes('Nhập văn bản nội dung sáng tạo')) || editable === 'true') {
-                        const style = getComputedStyle(node);
-                        if (style.display !== 'none' && style.visibility !== 'hidden') return node;
-                    }
-                    if (node.shadowRoot) {
-                        const nested = find(node.shadowRoot);
-                        if (nested) return nested;
-                    }
-                }
-                return null;
-            }
-            return find(document);
-            """
-        ) or self._visible(candidates)
-        el.clear()
-        el.send_keys(description)
+
+        def fill(driver):
+            self._checkpoint()
+            try:
+                snapshot = self._confirm_form_snapshot()
+                field = snapshot.get("description")
+                if not snapshot.get("formReady") or field is None:
+                    return False
+                # Re-discover on each poll: React may replace the editor after transition.
+                return driver.execute_script(SET_DESCRIPTION, field, description)
+            except StaleElementReferenceException:
+                return False
+
+        try:
+            WebDriverWait(self.driver, timeout, poll_frequency=0.1).until(fill)
+        except TimeoutException as error:
+            raise TimeoutException(f"Màn hình mô tả chưa sẵn sàng hoặc chưa nhận nội dung sau {timeout:g}s.") from error
 
     def set_public_profile(self, enabled):
         text = "Hiển thị trên hồ sơ TikTok công khai"
@@ -548,7 +528,7 @@ class SellerCenter:
 
         if result == "next":
             self.click_next_step()
-        self.click_confirm()
+        self.click_confirm(timeout=upload_timeout)
         self.fill_description(description)
         self.set_public_profile(public_profile)
         self.click_save()

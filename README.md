@@ -22,6 +22,8 @@ Video được lọc trước khi upload nếu không đúng định dạng, vư
 Các quy tắc này có thể chỉnh trực tiếp trên khung **Quy tắc video** của giao diện. Giá trị được lưu trong `config.json` dưới `video_rules`; `batch_size` được giới hạn từ 1 đến 50.
 
 `upload_timeout_seconds` quy định thời gian tối đa chờ TikTok tải và xác thực cả batch. Mặc định là 900 giây (15 phút), phù hợp với batch nhiều video.
+
+Bước `Xác nhận` cũng lấy hạn chờ từ `upload_timeout_seconds`, kiểm tra mỗi 0,1 giây và chỉ hoàn tất khi màn hình 3/3 đã đóng, ô mô tả trong form upload đã xuất hiện. Nút trong open Shadow DOM được nhận diện không phụ thuộc hậu tố phiên bản `ks-button`. Nếu Chrome coi chính host của nút là phần tử chặn click, tool kiểm tra vị trí chuột trước khi dùng pointer click; không bấm xuyên qua overlay khác. Một click đã được gửi sẽ không bị lặp lại trong lúc chờ chuyển màn hình. Nếu không chuyển được, log báo lỗi ở bước xác nhận, không tiếp tục nhập mô tả hoặc lưu.
 12. Có Pause / Resume / Stop, progress, log, screenshot lỗi, state để không upload lại file đã thành công.
 
 CAPTCHA/2FA không bị tự động vượt qua; nếu TikTok yêu cầu, hoàn tất trên cửa sổ Chrome và tool sẽ tự tiếp tục.
@@ -80,6 +82,7 @@ Các AI agent hoặc developer phải tuân thủ quy trình sau cho mọi thay 
 	- `app.py`: giao diện, cấu hình và trạng thái phiên.
 	- `automation/engine.py`: queue, batch, progress, pause/resume/stop.
 	- `automation/seller_center.py`: Selenium workflow và selector TikTok.
+	- `automation/confirm_form.py`: nhận diện nút xác nhận, form mô tả và kiểm tra an toàn cho pointer click.
 	- `automation/validator.py`: lọc video trước upload.
 	- `automation/state.py`: chống upload trùng.
 	- `automation/browser.py`: Chrome và ChromeDriver.
@@ -93,7 +96,7 @@ Các AI agent hoặc developer phải tuân thủ quy trình sau cho mọi thay 
 Chạy kiểm tra cú pháp toàn bộ project:
 
 ```powershell
-python -m py_compile app.py automation\engine.py automation\seller_center.py automation\browser.py automation\state.py automation\validator.py
+python -m py_compile app.py automation\engine.py automation\seller_center.py automation\confirm_form.py automation\browser.py automation\state.py automation\validator.py
 ```
 
 Kiểm tra cấu hình:
@@ -113,3 +116,20 @@ Nếu sửa upload batch, phải xác nhận nhiều đường dẫn được g�
 Nếu sửa Selenium selector hoặc workflow, phải kiểm tra bằng screenshot/HTML DOM thực tế tương ứng với bước vừa sửa. Chỉ kết luận thành công sau khi test hành vi đã đạt; compile thành công một mình chưa đủ.
 
 Sau khi hoàn tất, báo rõ: file đã sửa, test đã chạy, kết quả test và những phần chưa thể test trực tiếp trên TikTok.
+
+### Test Xác nhận → mô tả
+
+Test logic không mở trình duyệt:
+
+```powershell
+python -m unittest discover -s tests -p test_confirmation.py -v
+```
+
+Test Chrome headless dùng HTML cục bộ, mô phỏng nút có slot theo markup đã cung cấp; không mở TikTok, không dùng profile đăng nhập và không upload hay lưu video:
+
+```powershell
+$env:RUN_CONFIRM_BROWSER_TESTS='1'
+python -m unittest discover -s tests -p test_confirmation_browser.py -v
+```
+
+Có thể đặt `TEST_CHROMEDRIVER` thành đường dẫn ChromeDriver có sẵn khớp Chrome. Kết quả test cục bộ không thay thế kiểm tra trên TikTok thực tế. Sau khi cập nhật code, đóng hẳn cửa sổ tool rồi chạy lại `run.bat`; bấm Dừng/Bắt đầu không nạp lại module Python.

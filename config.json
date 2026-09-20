@@ -5,8 +5,8 @@
   "product_name": "",
   "description": "hehehee test nbha",
   "public_profile": true,
-  "batch_size": 1,
-  "upload_timeout_seconds": 900,
+  "batch_size": 10,
+  "upload_timeout_seconds": 200,
   "max_file_size_mb": 500,
   "video_rules": {
     "max_file_size_mb": 500.0,
@@ -20,7 +20,7 @@
     ".mpeg",
     ".avi"
   ],
-  "folder": "D:\\video toptop",
+  "folder": "D:/video toptop v2",
   "language": "vi",
   "theme": "dark"
 }
