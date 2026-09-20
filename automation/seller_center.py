@@ -1,5 +1,6 @@
 import time
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -22,11 +23,26 @@ class SellerCenter:
     def open_video_manager(self, url):
         self.emit({"type": "info", "message": "Đã đăng nhập. Đang mở trang quản lý video..."})
         self.driver.get(url)
-        self._visible([
+        self.wait_for_video_manager(timeout=30)
+
+    def wait_for_video_manager(self, timeout=20):
+        locators = [
             (By.CSS_SELECTOR, 'button[data-testid="creation-page-add-anchor-cxMyKe"]'),
             (By.CSS_SELECTOR, 'button[data-tid="m4b_dropdown_button"]'),
-            (By.XPATH, '//button[normalize-space(.)="Thêm"]')
-        ], timeout=30)
+            (By.XPATH, '//button[normalize-space(.)="Thêm"]'),
+        ]
+
+        def ready(driver):
+            if "/ads-creation/manage-analyze" not in driver.current_url:
+                return False
+            for locator in locators:
+                for element in driver.find_elements(*locator):
+                    if element.is_displayed() and element.is_enabled():
+                        return True
+            return False
+
+        self._checkpoint()
+        WebDriverWait(self.driver, timeout, poll_frequency=FAST_POLL).until(ready)
 
     def ensure_logged_in(self, timeout=300):
         # Chỉ chờ người dùng hoàn tất login/2FA/CAPTCHA nếu TikTok yêu cầu.
@@ -103,6 +119,25 @@ class SellerCenter:
             self._text_exact("Tải video lên"),
             (By.XPATH, '//*[contains(normalize-space(.),"Tải video lên")]')
         ], timeout=10)
+        self.wait_for_upload_drawer(timeout=15)
+
+    def wait_for_upload_drawer(self, timeout=15):
+        def ready(driver):
+            visible_product_button = any(
+                element.is_displayed()
+                for element in driver.find_elements(
+                    By.CSS_SELECTOR, 'button[data-testid^="upload-drawer-product-link-"]'
+                )
+            )
+            body = driver.find_element(By.TAG_NAME, "body").text
+            upload_step_visible = "Bước 1/3" in body
+            upload_title_visible = "Tải video lên" in body and (
+                "Nội dung sáng tạo" not in body or upload_step_visible
+            )
+            return visible_product_button or upload_step_visible or upload_title_visible
+
+        self._checkpoint()
+        WebDriverWait(self.driver, timeout, poll_frequency=FAST_POLL).until(ready)
 
     def select_account(self, name):
         normalized = " ".join(name.split())
@@ -131,31 +166,61 @@ class SellerCenter:
     def choose_product(self, name):
         if not name:
             return
-        # Product UI có thể khác theo Seller Center; ưu tiên label/placeholder.
-        candidates = self.driver.find_elements(
-            By.XPATH,
-            '//input[contains(@placeholder,"sản phẩm") or contains(@placeholder,"Sản phẩm") or contains(@placeholder,"product")]'
-        )
-        if candidates:
-            el = next((x for x in candidates if x.is_displayed()), None)
-            if el:
-                el.clear()
-                el.send_keys(name)
-                time.sleep(.8)
-                self._click([self._text_exact(name), self._text_contains(name)])
-                return
-        # Nếu option đã hiện trực tiếp.
-        self._click([self._text_exact(name), self._text_contains(name)])
+        try:
+            self._click([
+                (By.CSS_SELECTOR, 'button[data-testid^="upload-drawer-product-link-"]'),
+                (By.XPATH, '//button[@data-tid="m4b_button" and .//span[normalize-space(.)="Chọn sản phẩm"]]'),
+                (By.XPATH, '//button[normalize-space(.)="Chọn sản phẩm"]'),
+            ], timeout=5)
+        except TimeoutException:
+            return
+
+        input_locators = [
+            (By.CSS_SELECTOR, 'input[placeholder*="sản phẩm" i]'),
+            (By.CSS_SELECTOR, 'input[placeholder*="product" i]'),
+            (By.CSS_SELECTOR, '[role="combobox"] input'),
+        ]
+        field = None
+        try:
+            field = self._visible(input_locators, timeout=5)
+            field.clear()
+            field.send_keys(name)
+        except Exception:
+            self.driver.execute_script("document.activeElement?.blur();")
+            return
+
+        normalized = " ".join(name.split())
+
+        def find_exact_option(driver):
+            candidates = driver.find_elements(
+                By.CSS_SELECTOR,
+                '[role="option"], [role="menuitem"], li, button'
+            )
+            for element in candidates:
+                if element.is_displayed() and " ".join(element.text.split()) == normalized:
+                    return element
+            return False
+
+        try:
+            option = WebDriverWait(self.driver, 5, poll_frequency=FAST_POLL).until(find_exact_option)
+            option.click()
+        except Exception:
+            # Sản phẩm không tồn tại: giữ trạng thái không chọn sản phẩm.
+            try:
+                field.send_keys(Keys.ESCAPE)
+            except Exception:
+                self.driver.execute_script("document.activeElement?.blur();")
+            return
 
     def click_next(self):
         try:
-            self._click_shadow_button(("Tiếp",), timeout=2)
-        except TimeoutException:
             self._click([
                 (By.XPATH, '//button[@data-tid="m4b_button" and normalize-space(.)="Tiếp" and not(@disabled)]'),
                 (By.XPATH, '//button[normalize-space(.)="Tiếp" and not(@disabled)]'),
-                (By.XPATH, '//*[@role="button" and normalize-space(.)="Tiếp"]')
-            ], timeout=10)
+                (By.XPATH, '//*[@role="button" and normalize-space(.)="Tiếp" and not(@aria-disabled="true")]')
+            ], timeout=1.5)
+        except TimeoutException:
+            self._click_custom_button(("Tiếp",), timeout=10)
 
     def upload_file(self, file_path):
         self.upload_files([file_path])
@@ -237,8 +302,33 @@ class SellerCenter:
         if not clicked:
             raise TimeoutException(f"Không click được nút {', '.join(labels)} ở trạng thái sẵn sàng.")
 
+    def _click_custom_button(self, labels, timeout=30):
+        def click_button(driver):
+            for host in driver.find_elements(By.CSS_SELECTOR, 'ks-button-1-1-11'):
+                if not host.is_displayed() or ' '.join(host.text.split()) not in labels:
+                    continue
+                try:
+                    button = host.shadow_root.find_element(By.CSS_SELECTOR, 'button')
+                    if not button.is_enabled():
+                        continue
+                    driver.execute_script(
+                        "arguments[0].scrollIntoView({block: 'center'});", button
+                    )
+                    button.click()
+                    return True
+                except Exception:
+                    try:
+                        host.click()
+                        return True
+                    except Exception:
+                        continue
+            return False
+
+        self._checkpoint()
+        WebDriverWait(self.driver, timeout, poll_frequency=FAST_POLL).until(click_button)
+
     def click_next_step(self):
-        self._click_shadow_button(("Tiếp theo",), timeout=900)
+        self._click_custom_button(("Tiếp theo",), timeout=900)
 
     def wait_upload_result(self, timeout=900):
         end = time.time() + timeout
@@ -404,12 +494,37 @@ class SellerCenter:
         if len(boxes) == 1 and boxes[0].is_selected() != enabled:
             self.driver.execute_script("arguments[0].click();", boxes[0])
 
+    def close_upload_success_modal(self, timeout=30):
+        def click_done(driver):
+            for host in driver.find_elements(By.CSS_SELECTOR, 'ks-button-1-1-11'):
+                label = " ".join(host.text.split())
+                if not host.is_displayed() or not label.startswith("Xong"):
+                    continue
+                try:
+                    button = host.shadow_root.find_element(By.CSS_SELECTOR, 'button')
+                    if button.is_enabled() and button.get_attribute("aria-disabled") != "true":
+                        button.click()
+                        return True
+                except Exception:
+                    continue
+
+            for button in driver.find_elements(By.XPATH, '//button[starts-with(normalize-space(.), "Xong")]'):
+                if button.is_displayed() and button.is_enabled():
+                    button.click()
+                    return True
+            return False
+
+        self._checkpoint()
+        WebDriverWait(self.driver, timeout, poll_frequency=FAST_POLL).until(click_done)
+
     def click_save(self):
         self._click([
             (By.XPATH, '//button[normalize-space(.)="Lưu" and not(@disabled)]'),
             self._text_exact("Lưu")
         ], timeout=30)
-        time.sleep(1.5)
+        self.close_upload_success_modal(timeout=30)
+        time.sleep(3)
+        self.wait_for_video_manager(timeout=20)
 
     def upload_one(self, file_path, account, product, description, public_profile, upload_timeout=900):
         return self.upload_many([file_path], account, product, description, public_profile, upload_timeout)[0]
