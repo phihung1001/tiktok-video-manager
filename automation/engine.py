@@ -40,11 +40,25 @@ class AutomationEngine:
         try:
             LOGS.mkdir(exist_ok=True)
             stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            self.driver.save_screenshot(str(LOGS / f"{stamp}-{name}.png"))
+            path = LOGS / f"{stamp}-{name}.png"
+            self.driver.save_screenshot(str(path))
+            return str(path)
         except Exception:
+            return None
+
+    def _clear_logs(self):
+        """Start each session with a clean set of diagnostic screenshots."""
+        try:
+            LOGS.mkdir(exist_ok=True)
+            for item in LOGS.iterdir():
+                if item.is_file():
+                    item.unlink()
+        except Exception:
+            # Failure to clean old diagnostics must not stop the upload session.
             pass
 
     def run(self):
+        self._clear_logs()
         cfg_file = load_config()
         seller_url = cfg_file.get("seller_center_url", "https://seller-vn.tiktok.com/account/login")
         manage_url = cfg_file.get("video_manager_url", "https://seller-vn.tiktok.com/ads-creation/manage-analyze?mpa=1&reporting_type=video")
@@ -112,8 +126,10 @@ class AutomationEngine:
                         break
                     raise
                 except Exception as e:
-                    self._screenshot("error")
-                    message = f"{type(e).__name__}: {e}. Đã chụp screenshot trong logs/."
+                    screenshot = self._screenshot("error")
+                    message = f"{type(e).__name__}: {e}. Đã chụp screenshot để xem trên màn hình tool."
+                    if screenshot:
+                        self.emit({"type": "screenshot", "path": screenshot, "message": "Ảnh lỗi của batch"})
                     for p, _ in batch:
                         self.emit({"type":"result","file":p.name,"status":"error","message":message})
                     break
@@ -122,8 +138,10 @@ class AutomationEngine:
             if str(e) != "STOP_REQUESTED":
                 self.emit({"type":"error","message":str(e)})
         except Exception as e:
-            self._screenshot("fatal")
+            screenshot = self._screenshot("fatal")
             self.emit({"type":"error","message":f"{type(e).__name__}: {e}"})
+            if screenshot:
+                self.emit({"type": "screenshot", "path": screenshot, "message": "Ảnh lỗi nghiêm trọng"})
         finally:
             try:
                 if self.driver:

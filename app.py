@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import threading
+import math
 from pathlib import Path
 from automation.engine import AutomationEngine
 from automation.state import load_config, save_config
@@ -12,6 +13,13 @@ class App(tk.Tk):
         self.geometry("980x760")
         self.minsize(860, 650)
         self.engine = None
+        self.error_photo = None
+        self.error_photo_path = None
+        self.error_photo_window = None
+        self.error_photo_original = None
+        self.error_photo_zoom = 1.0
+        self.error_photo_canvas = None
+        self.error_photo_zoom_label = None
         self.cfg = load_config()
         self.language = tk.StringVar(value=self.cfg.get("language", "vi"))
         self.theme = tk.StringVar(value=self.cfg.get("theme", "light"))
@@ -44,7 +52,8 @@ class App(tk.Tk):
             "journal": "Nhật ký phiên làm việc", "clear": "Xóa log", "ready": "Sẵn sàng",
             "running": "Đang chạy", "stopped": "Đã dừng", "done": "Hoàn tất", "theme": "Theme",
             "language": "Ngôn ngữ", "light": "Sáng", "dark": "Tối", "vietnamese": "Tiếng Việt",
-            "english": "English",
+            "english": "English", "error_screenshot": "ẢNH LỖI GẦN NHẤT", "no_screenshot": "Chưa có ảnh lỗi",
+            "view_large": "Xem ảnh lớn", "fit_window": "Vừa cửa sổ", "screenshot_ready": "Ảnh lỗi đã được hiển thị trên màn hình tool",
         },
         "en": {
             "subtitle": "Automate video content in Seller Center", "session": "UPLOAD SESSION",
@@ -58,7 +67,8 @@ class App(tk.Tk):
             "journal": "Session activity", "clear": "Clear log", "ready": "Ready",
             "running": "Running", "stopped": "Stopped", "done": "Completed", "theme": "Theme",
             "language": "Language", "light": "Light", "dark": "Dark", "vietnamese": "Tiếng Việt",
-            "english": "English",
+            "english": "English", "error_screenshot": "LATEST ERROR SCREENSHOT", "no_screenshot": "No error screenshot",
+            "view_large": "View larger", "fit_window": "Fit window", "screenshot_ready": "Error screenshot displayed in the tool",
         },
     }
 
@@ -170,6 +180,13 @@ class App(tk.Tk):
 
         log_frame = ttk.Frame(progress_box, style="Card.TFrame")
         log_frame.pack(fill="both", expand=True)
+        preview_box = ttk.LabelFrame(log_frame, text=f"  {self._t('error_screenshot')}  ", padding=(8, 8), style="Card.TLabelframe")
+        preview_box.pack(side="right", fill="y", padx=(10, 0))
+        self.error_preview = ttk.Label(preview_box, text=self._t("no_screenshot"), anchor="center", justify="center", width=30, style="Subtitle.TLabel")
+        self.error_preview.pack(fill="both", expand=True, padx=4, pady=4)
+        self.view_photo_btn = ttk.Button(preview_box, text=self._t("view_large"), command=self._view_error_photo, state="disabled", style="Secondary.TButton")
+        self.view_photo_btn.pack(fill="x", pady=(6, 0))
+
         self.log = tk.Text(log_frame, height=12, state="disabled", wrap="word", relief="flat", bd=0, padx=12, pady=10, bg="#111c29", fg="#d9e3ec", insertbackground="#ffffff", font=("Consolas", 10))
         self.log.pack(side="left", fill="both", expand=True)
         scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log.yview)
@@ -260,6 +277,13 @@ class App(tk.Tk):
         }
         save_config(config)
         self._set_running(True)
+        self.clear_log()
+        self.error_photo = None
+        self.error_photo_path = None
+        self.error_photo_original = None
+        self.error_preview.configure(image="", text=self._t("no_screenshot"))
+        self.error_preview.image = None
+        self.view_photo_btn.configure(state="disabled")
         self.progress["value"] = 0
         self.counter.set("0 / 0")
         self._log("INFO", "Bắt đầu phiên automation...")
@@ -317,6 +341,8 @@ class App(tk.Tk):
             self._log("INFO", e["message"])
         elif t == "error":
             self._log("ERROR", e["message"])
+        elif t == "screenshot":
+            self._show_error_photo(e.get("path"), e.get("message", self._t("screenshot_ready")))
         elif t == "finished":
             self.status.set(self._t("stopped") if e.get("stopped") else self._t("done"))
             self._log("INFO", "Session stopped." if e.get("stopped") and self.language.get() == "en" else "Phiên đã dừng." if e.get("stopped") else "Queue completed." if self.language.get() == "en" else "Đã xử lý xong hàng đợi.")
@@ -326,6 +352,96 @@ class App(tk.Tk):
         self.log.insert("end", f"[{level}] {msg}\n")
         self.log.see("end")
         self.log["state"] = "disabled"
+
+    def _show_error_photo(self, path, caption):
+        if not path or not Path(path).is_file():
+            return
+        try:
+            image = tk.PhotoImage(file=path)
+            factor = max(1, math.ceil(image.width() / 320), math.ceil(image.height() / 220))
+            preview = image.subsample(factor, factor) if factor > 1 else image
+            self.error_photo = image
+            self.error_photo_path = path
+            self.error_preview.configure(image=preview, text="")
+            self.error_preview.image = preview
+            self.view_photo_btn.configure(state="normal")
+            self._log("ERROR", f"{caption}: {Path(path).name}")
+        except tk.TclError as error:
+            self._log("ERROR", f"Không thể hiển thị ảnh lỗi: {error}")
+
+    def _view_error_photo(self):
+        if not self.error_photo_path or not Path(self.error_photo_path).is_file():
+            return
+        if self.error_photo_window and self.error_photo_window.winfo_exists():
+            self.error_photo_window.lift()
+            return
+        window = tk.Toplevel(self)
+        window.title(self._t("error_screenshot"))
+        window.geometry("1200x800")
+        window.minsize(700, 500)
+        window.configure(bg="#101820" if self.theme.get() == "dark" else "#f3f6f8")
+        toolbar = ttk.Frame(window, style="App.TFrame")
+        toolbar.pack(fill="x", padx=10, pady=(10, 4))
+        ttk.Button(toolbar, text="−", width=4, command=lambda: self._zoom_error_photo(0.8)).pack(side="left")
+        ttk.Button(toolbar, text="+", width=4, command=lambda: self._zoom_error_photo(1.25)).pack(side="left", padx=(4, 0))
+        ttk.Button(toolbar, text="100%", command=lambda: self._set_error_photo_zoom(1.0)).pack(side="left", padx=(10, 0))
+        ttk.Button(toolbar, text=self._t("fit_window"), command=self._fit_error_photo).pack(side="left", padx=(4, 0))
+        self.error_photo_zoom_label = ttk.Label(toolbar, text="100%", style="Subtitle.TLabel")
+        self.error_photo_zoom_label.pack(side="right")
+
+        viewer = ttk.Frame(window, style="App.TFrame")
+        viewer.pack(fill="both", expand=True, padx=10, pady=(4, 10))
+        viewer.rowconfigure(0, weight=1)
+        viewer.columnconfigure(0, weight=1)
+        canvas = tk.Canvas(viewer, highlightthickness=0, bg="#101820" if self.theme.get() == "dark" else "#dfe7ec")
+        canvas.grid(row=0, column=0, sticky="nsew")
+        x_scroll = ttk.Scrollbar(viewer, orient="horizontal", command=canvas.xview)
+        y_scroll = ttk.Scrollbar(viewer, orient="vertical", command=canvas.yview)
+        x_scroll.grid(row=1, column=0, sticky="ew")
+        y_scroll.grid(row=0, column=1, sticky="ns")
+        canvas.configure(xscrollcommand=x_scroll.set, yscrollcommand=y_scroll.set)
+        self.error_photo_window = window
+        self.error_photo_canvas = canvas
+        self.error_photo_original = tk.PhotoImage(file=self.error_photo_path)
+        window.update_idletasks()
+        self._fit_error_photo()
+
+    def _render_error_photo(self):
+        if not self.error_photo_canvas or not self.error_photo_original:
+            return
+        image = self.error_photo_original
+        if self.error_photo_zoom < 1:
+            denominator = max(1, round(1 / self.error_photo_zoom))
+            displayed = image.subsample(denominator, denominator)
+        elif self.error_photo_zoom == 1:
+            displayed = image
+        else:
+            factor = max(1, round(self.error_photo_zoom))
+            displayed = image.zoom(factor, factor)
+        self.error_photo_canvas.delete("all")
+        self.error_photo_canvas.create_image(0, 0, image=displayed, anchor="nw")
+        self.error_photo_canvas.image = displayed
+        self.error_photo_canvas.configure(scrollregion=(0, 0, displayed.width(), displayed.height()))
+        if self.error_photo_zoom_label:
+            self.error_photo_zoom_label.configure(text=f"{round(self.error_photo_zoom * 100)}% — {image.width()}×{image.height()} px")
+
+    def _set_error_photo_zoom(self, zoom):
+        self.error_photo_zoom = max(0.25, min(4.0, zoom))
+        self._render_error_photo()
+
+    def _zoom_error_photo(self, multiplier):
+        if multiplier > 1:
+            self._set_error_photo_zoom(min(4.0, max(2.0, math.ceil(self.error_photo_zoom) + 1 if self.error_photo_zoom >= 2 else 2.0)))
+        else:
+            self._set_error_photo_zoom(max(0.25, math.floor(self.error_photo_zoom) - 1 if self.error_photo_zoom > 1 else 0.5))
+
+    def _fit_error_photo(self):
+        if not self.error_photo_original or not self.error_photo_canvas:
+            return
+        width = max(1, self.error_photo_canvas.winfo_width())
+        height = max(1, self.error_photo_canvas.winfo_height())
+        image = self.error_photo_original
+        self._set_error_photo_zoom(min(width / image.width(), height / image.height(), 1.0))
 
 if __name__ == "__main__":
     App().mainloop()
