@@ -4,10 +4,10 @@ from datetime import datetime
 from .browser import create_driver
 from .seller_center import SellerCenter
 from .validator import inspect_video
-from .state import already_completed, mark_completed, load_config
+from .state import already_completed, load_config, mark_completed, mark_unknown, mark_uploading, upload_status
+from .paths import LOGS, PROJECT_ROOT
 
-ROOT = Path(__file__).resolve().parents[1]
-LOGS = ROOT / "logs"
+ROOT = PROJECT_ROOT
 
 class AutomationEngine:
     def __init__(self, config, emit):
@@ -84,9 +84,15 @@ class AutomationEngine:
                 self.emit({"type":"result","file":p.name,"status":"invalid","message":f"Bỏ qua trước upload: {reason}"})
                 self.emit({"type":"progress","done":pre_done,"total":len(videos),"percent":pre_done/len(videos)*100})
                 continue
-            if already_completed(p, meta["size"], meta["mtime"]):
+            status = upload_status(p, meta["size"], meta["mtime"])
+            if status == "success":
                 pre_done += 1
                 self.emit({"type":"result","file":p.name,"status":"info","message":"Đã upload thành công ở phiên trước — bỏ qua."})
+                self.emit({"type":"progress","done":pre_done,"total":len(videos),"percent":pre_done/len(videos)*100})
+                continue
+            if status in {"uploading", "unknown"}:
+                pre_done += 1
+                self.emit({"type":"result","file":p.name,"status":"error","message":"Trạng thái upload chưa xác định từ phiên trước — bỏ qua để tránh upload trùng."})
                 self.emit({"type":"progress","done":pre_done,"total":len(videos),"percent":pre_done/len(videos)*100})
                 continue
             queue.append((p, meta))
@@ -109,6 +115,8 @@ class AutomationEngine:
                 self._wait_control()
                 self.emit({"type":"info","message":f"Đang tải batch {batch_number}/{len(batches)}: {len(batch)} video"})
                 try:
+                    for p, meta in batch:
+                        mark_uploading(p, meta["size"], meta["mtime"])
                     statuses = seller.upload_many(
                         [p for p, _ in batch], self.config["account_name"],
                         self.config.get("product_name", ""), self.config.get("description", ""),
@@ -128,6 +136,8 @@ class AutomationEngine:
                 except Exception as e:
                     screenshot = self._screenshot("error")
                     message = f"{type(e).__name__}: {e}. Đã chụp screenshot để xem trên màn hình tool."
+                    for p, meta in batch:
+                        mark_unknown(p, meta["size"], meta["mtime"], message)
                     if screenshot:
                         self.emit({"type": "screenshot", "path": screenshot, "message": "Ảnh lỗi của batch"})
                     for p, _ in batch:

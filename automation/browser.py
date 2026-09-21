@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from .paths import BROWSER_PROFILE, DATA_ROOT, ensure_data_root
 
 def _profile_is_locked(profile: Path):
     return any((profile / name).exists() for name in (
@@ -17,10 +18,11 @@ def _session_profile(root: Path):
     return profile
 
 def create_driver(root: Path):
-    profile = root / "browser-profile"
+    ensure_data_root()
+    profile = BROWSER_PROFILE
     profile.mkdir(parents=True, exist_ok=True)
     if _profile_is_locked(profile):
-        profile = _session_profile(root)
+        profile = _session_profile(DATA_ROOT)
 
     options = Options()
     options.add_argument(f"--user-data-dir={profile}")

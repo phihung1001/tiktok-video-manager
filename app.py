@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 from automation.engine import AutomationEngine
 from automation.state import load_config, save_config
+from automation.license import LicenseManager, device_id
 
 class App(tk.Tk):
     def __init__(self):
@@ -27,6 +28,7 @@ class App(tk.Tk):
         self.folder = tk.StringVar(value=self.cfg.get("folder", ""))
         self.account = tk.StringVar(value=self.cfg.get("account_name", "HT88 - Thời trang nam"))
         self.product = tk.StringVar(value=self.cfg.get("product_name", ""))
+        self.license_key = tk.StringVar(value=self.cfg.get("license_key", ""))
         self.public_profile = tk.BooleanVar(value=self.cfg.get("public_profile", False))
         rules = self.cfg.get("video_rules", {})
         self.max_file_size = tk.StringVar(value=str(rules.get("max_file_size_mb", self.cfg.get("max_file_size_mb", 500))))
@@ -52,7 +54,7 @@ class App(tk.Tk):
             "journal": "Nhật ký phiên làm việc", "clear": "Xóa log", "ready": "Sẵn sàng",
             "running": "Đang chạy", "stopped": "Đã dừng", "done": "Hoàn tất", "theme": "Theme",
             "language": "Ngôn ngữ", "light": "Sáng", "dark": "Tối", "vietnamese": "Tiếng Việt",
-            "english": "English", "error_screenshot": "ẢNH LỖI GẦN NHẤT", "no_screenshot": "Chưa có ảnh lỗi",
+            "english": "English", "license_key": "License key", "error_screenshot": "ẢNH LỖI GẦN NHẤT", "no_screenshot": "Chưa có ảnh lỗi",
             "view_large": "Xem ảnh lớn", "fit_window": "Vừa cửa sổ", "screenshot_ready": "Ảnh lỗi đã được hiển thị trên màn hình tool",
         },
         "en": {
@@ -67,7 +69,7 @@ class App(tk.Tk):
             "journal": "Session activity", "clear": "Clear log", "ready": "Ready",
             "running": "Running", "stopped": "Stopped", "done": "Completed", "theme": "Theme",
             "language": "Language", "light": "Light", "dark": "Dark", "vietnamese": "Tiếng Việt",
-            "english": "English", "error_screenshot": "LATEST ERROR SCREENSHOT", "no_screenshot": "No error screenshot",
+            "english": "English", "license_key": "License key", "error_screenshot": "LATEST ERROR SCREENSHOT", "no_screenshot": "No error screenshot",
             "view_large": "View larger", "fit_window": "Fit window", "screenshot_ready": "Error screenshot displayed in the tool",
         },
     }
@@ -144,6 +146,8 @@ class App(tk.Tk):
             form, text=self._t("public"),
             variable=self.public_profile, style="Clean.TCheckbutton"
         ).grid(row=6, column=0, columnspan=2, sticky="w", pady=(0, 2))
+        ttk.Label(form, text=self._t("license_key"), style="Field.TLabel").grid(row=7, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        ttk.Entry(form, textvariable=self.license_key, style="Input.TEntry", show="*").grid(row=8, column=0, columnspan=2, sticky="ew", pady=(5, 0))
 
         rules_box = ttk.LabelFrame(outer, text=f"  {self._t('rules')}  ", padding=(12, 10), style="Card.TLabelframe")
         rules_box.pack(fill="x", pady=(0, 12))
@@ -236,6 +240,15 @@ class App(tk.Tk):
     def start(self):
         folder = self.folder.get().strip()
         account = self.account.get().strip()
+        license_config = dict(self.cfg)
+        license_config["license_key"] = self.license_key.get().strip()
+        if license_config.get("license_server_url"):
+            license_status = LicenseManager(license_config).validate(
+                license_config.get("license_key", ""), device_id()
+            )
+            if not license_status.valid:
+                messagebox.showerror("License", license_status.message)
+                return
         if not folder or not Path(folder).is_dir():
             messagebox.showerror("Lỗi", "Hãy chọn thư mục video hợp lệ.")
             return
@@ -266,6 +279,7 @@ class App(tk.Tk):
             "product_name": self.product.get().strip(),
             "description": self.description.get("1.0", "end").strip(),
             "public_profile": self.public_profile.get(),
+            "license_key": self.license_key.get().strip(),
             "batch_size": batch_size,
             "upload_timeout_seconds": upload_timeout,
             "video_rules": {

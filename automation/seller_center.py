@@ -26,11 +26,15 @@ class SellerCenter:
         self.driver.get(url)
 
     def open_video_manager(self, url):
-        self.emit({"type": "info", "message": "Đã đăng nhập. Đang mở trang quản lý video..."})
-        self.driver.get(url)
-        self.wait_for_video_manager(timeout=30)
+        self.emit({"type": "info", "message": "Phiên đăng nhập đã được nhận diện. Đang mở trang quản lý video..."})
+        try:
+            self.driver.get(url)
+        except TimeoutException as error:
+            raise TimeoutException("Chrome tải trang quản lý video quá 120 giây.") from error
+        self.wait_for_video_manager(timeout=120)
+        self.emit({"type": "info", "message": "Đã mở trang quản lý video thành công."})
 
-    def wait_for_video_manager(self, timeout=20):
+    def wait_for_video_manager(self, timeout=120):
         locators = [
             (By.CSS_SELECTOR, 'button[data-testid="creation-page-add-anchor-cxMyKe"]'),
             (By.CSS_SELECTOR, 'button[data-tid="m4b_dropdown_button"]'),
@@ -47,26 +51,36 @@ class SellerCenter:
             return False
 
         self._checkpoint()
-        WebDriverWait(self.driver, timeout, poll_frequency=FAST_POLL).until(ready)
+        try:
+            WebDriverWait(self.driver, timeout, poll_frequency=FAST_POLL).until(ready)
+        except TimeoutException as error:
+            raise TimeoutException(
+                f"Trang quản lý video chưa sẵn sàng sau {timeout} giây; URL hiện tại: {self.driver.current_url}"
+            ) from error
 
-    def ensure_logged_in(self, timeout=300):
+    def ensure_logged_in(self, timeout=600):
         # Chỉ chờ người dùng hoàn tất login/2FA/CAPTCHA nếu TikTok yêu cầu.
         end = time.time() + timeout
         informed = False
         while time.time() < end:
             self._checkpoint()
+            current_url = self.driver.current_url.lower()
             body = self.driver.find_element(By.TAG_NAME, "body").text.lower()
-            login_markers = ("đăng nhập", "log in", "login")
-            seller_markers = ("seller center", "trung tâm nhà bán", "thêm")
-            if any(x in body for x in seller_markers) and not (
-                "đăng nhập vào tiktok shop" in body or "log in to tiktok shop" in body
-            ):
+            login_url = any(marker in current_url for marker in ("/login", "login?", "signin", "sign-in"))
+            login_page = (
+                "đăng nhập vào tiktok shop" in body or
+                "log in to tiktok shop" in body or
+                "captcha" in body or
+                "xác minh" in body
+            )
+            seller_markers = ("seller center", "trung tâm nhà bán")
+            if not login_url and not login_page and any(x in body for x in seller_markers):
                 return
             if not informed:
                 self.emit({"type":"info","message":"Nếu Seller Center yêu cầu đăng nhập/2FA/CAPTCHA, hãy hoàn tất trên Chrome. Tool sẽ tự tiếp tục."})
                 informed = True
             time.sleep(2)
-        raise TimeoutException("Không phát hiện Seller Center đã đăng nhập sau 5 phút.")
+        raise TimeoutException("Không phát hiện đăng nhập Seller Center sau 10 phút; Chrome vẫn có thể đang ở màn hình login/2FA/CAPTCHA.")
 
     def _visible(self, locators, timeout=15):
         last = None
@@ -504,7 +518,7 @@ class SellerCenter:
         ], timeout=30)
         self.close_upload_success_modal(timeout=30)
         time.sleep(3)
-        self.wait_for_video_manager(timeout=20)
+        self.wait_for_video_manager(timeout=120)
 
     def upload_one(self, file_path, account, product, description, public_profile, upload_timeout=900):
         return self.upload_many([file_path], account, product, description, public_profile, upload_timeout)[0]
