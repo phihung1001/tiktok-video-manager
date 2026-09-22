@@ -13,11 +13,16 @@ from .confirm_form import CONFIRM_FORM_SNAPSHOT, CONFIRM_POINTER_SAFE, SET_DESCR
 FAST_POLL = 0.05
 
 class SellerCenter:
-    def __init__(self, driver, emit, wait_control):
+    def __init__(self, driver, emit, wait_control, diagnostic=False):
         self.driver = driver
         self.emit = emit
         self.wait_control = wait_control
+        self.diagnostic = diagnostic
         self.wait = WebDriverWait(driver, 20, poll_frequency=FAST_POLL)
+
+    def _diag(self, message):
+        if self.diagnostic:
+            self.emit({"type": "info", "message": f"[DIAGNOSTIC] {message}"})
 
     def _checkpoint(self):
         self.wait_control()
@@ -158,32 +163,130 @@ class SellerCenter:
         self._checkpoint()
         WebDriverWait(self.driver, timeout, poll_frequency=FAST_POLL).until(ready)
 
-    def select_account(self, name):
-        normalized = " ".join(name.split())
-        locator = (By.XPATH, f'//*[normalize-space(text())="{normalized}" or contains(normalize-space(text()),"{normalized}")]')
+    def select_account(self, value, mode="name"):
+        normalized = " ".join(str(value).split())
+        mode = "id" if mode == "id" else "name"
+        self._diag(f"Bắt đầu chọn tài khoản theo {mode}: {normalized!r}")
+
+        def find_exact_account(driver):
+            candidates = driver.find_elements(
+                By.CSS_SELECTOR,
+                'li[role="option"]'
+            )
+            for element in candidates:
+                if not element.is_displayed():
+                    continue
+                names = element.find_elements(
+                    By.CSS_SELECTOR,
+                    '[class^="name-"] span, [class*=" name-"] span, div[class*="name-"] span'
+                )
+                account_name = " ".join(names[0].text.split()) if names else ""
+                ids = element.find_elements(
+                    By.CSS_SELECTOR,
+                    '[class^="id-"], [class*=" id-"], div[class*="id-"]'
+                )
+                account_id = ""
+                if ids:
+                    account_id = ids[0].text.replace("ID:", "").strip()
+                if mode == "name" and account_name == normalized:
+                    return element
+                if mode == "id" and account_id == normalized:
+                    return element
+            return False
+
+        if mode == "name":
+            visible_lines = {
+                " ".join(line.split())
+                for line in self.driver.find_element(By.TAG_NAME, "body").text.splitlines()
+                if line.strip()
+            }
+            if normalized not in visible_lines:
+                self._diag("Tên tài khoản không xuất hiện chính xác trên màn hình hiện tại")
+                raise TimeoutException("Đang chọn sai tài khoản quảng cáo")
+
+        # Luôn mở ô tìm kiếm và nhập giá trị từ tool; không dùng lựa chọn cũ.
         try:
-            if WebDriverWait(self.driver, 3, poll_frequency=FAST_POLL).until(
-                lambda driver: any(element.is_displayed() for element in driver.find_elements(*locator))
-            ):
-                return
+            # Khi dropdown đang đóng, ô m4b_input chưa tồn tại; phải mở
+            # combobox tài khoản trước rồi mới tìm ô tìm kiếm bên trong.
+            self._click([
+                (By.XPATH, '//input[@data-tid="m4b_input"]/following-sibling::span[contains(@class,"input-group-suffix")]'),
+            ], timeout=3)
+            self._diag("Đã click nút mở danh sách tài khoản")
         except TimeoutException:
-            pass
+            self._click([
+                (By.XPATH, '//input[@data-tid="m4b_input"]/ancestor::span[contains(@class,"input-group")][1]'),
+            ], timeout=3)
+            self._diag("Đã click wrapper mở danh sách tài khoản")
+        def visible_account_input(driver):
+            inputs = driver.find_elements(By.CSS_SELECTOR, 'input[data-tid="m4b_input"]')
+            for input_element in inputs:
+                if input_element.is_displayed() and input_element.is_enabled():
+                    return input_element
+            return False
 
-        # Mở combobox/account picker.
-        self._click([
-            (By.XPATH, '//*[contains(text(),"Tài khoản TikTok")]/following::*[@role="combobox"][1]'),
-            (By.CSS_SELECTOR, '[role="combobox"]'),
-            (By.XPATH, '//input[contains(@placeholder,"Tài khoản")]')
-        ])
         try:
-            self._click([self._text_exact(normalized), self._text_contains(normalized)])
-        except TimeoutException as error:
-            raise TimeoutException(
-                f"Không tìm thấy tài khoản TikTok '{normalized}'. Hãy kiểm tra account_name trong config.json."
-            ) from error
+            search_field = WebDriverWait(self.driver, 5, poll_frequency=FAST_POLL).until(visible_account_input)
+            self._diag("Đã tìm thấy input[data-tid=m4b_input]")
+        except Exception as error:
+            raise TimeoutException("Không tìm thấy ô tìm kiếm tài khoản quảng cáo") from error
 
-    def choose_product(self, name):
-        if not name:
+        try:
+            self.driver.execute_script(
+                """
+                const input = arguments[0];
+                const value = arguments[1];
+                const setter = Object.getOwnPropertyDescriptor(
+                    HTMLInputElement.prototype, 'value'
+                ).set;
+                input.focus();
+                setter.call(input, value);
+                input.dispatchEvent(new InputEvent('input', {
+                    bubbles: true, inputType: 'insertText', data: value
+                }));
+                input.dispatchEvent(new Event('change', {bubbles: true}));
+                input.dispatchEvent(new KeyboardEvent('keyup', {bubbles: true, key: 'End'}));
+                """,
+                search_field, normalized
+            )
+        except Exception as error:
+            try:
+                search_field.send_keys(Keys.CONTROL, "a")
+                search_field.send_keys(normalized)
+            except Exception as fallback_error:
+                raise TimeoutException("Không nhập được tên/ID tài khoản quảng cáo") from fallback_error
+
+        if (search_field.get_attribute("value") or "") != normalized:
+            try:
+                search_field.send_keys(Keys.CONTROL, "a")
+                search_field.send_keys(normalized)
+            except Exception as error:
+                raise TimeoutException("Không nhập được tên/ID tài khoản quảng cáo") from error
+        if (search_field.get_attribute("value") or "") != normalized:
+            raise TimeoutException("Không nhập được tên/ID tài khoản quảng cáo")
+        self._diag(f"Giá trị input sau khi nhập: {search_field.get_attribute('value')!r}")
+        try:
+            option = WebDriverWait(self.driver, 5, poll_frequency=FAST_POLL).until(find_exact_account)
+        except TimeoutException as error:
+            self._diag("Không tìm thấy option tài khoản khớp chính xác")
+            raise TimeoutException("Đang chọn sai tài khoản quảng cáo: không tìm thấy option khớp chính xác") from error
+        self._diag(f"Đã tìm thấy option tài khoản, aria-selected={option.get_attribute('aria-selected')!r}")
+        try:
+            option.click()
+            self._diag("Đã click option tài khoản bằng native click")
+        except Exception:
+            try:
+                # Một số bản Arco chặn native click trên wrapper nhưng vẫn
+                # nhận click tại chính phần tử option.
+                fresh_option = WebDriverWait(self.driver, 2, poll_frequency=FAST_POLL).until(find_exact_account)
+                self.driver.execute_script("arguments[0].click();", fresh_option)
+                self._diag("Đã click option tài khoản bằng JavaScript fallback")
+            except Exception as error:
+                raise TimeoutException("Đã tìm thấy tài khoản nhưng không click được option") from error
+
+    def choose_product(self, value, mode="name"):
+        value = " ".join(str(value).split())
+        mode = "id" if mode == "id" else "name"
+        if not value:
             return
         try:
             self._click([
@@ -191,8 +294,8 @@ class SellerCenter:
                 (By.XPATH, '//button[@data-tid="m4b_button" and .//span[normalize-space(.)="Chọn sản phẩm"]]'),
                 (By.XPATH, '//button[normalize-space(.)="Chọn sản phẩm"]'),
             ], timeout=5)
-        except TimeoutException:
-            return
+        except TimeoutException as error:
+            raise TimeoutException("Đang chọn sai sản phẩm") from error
 
         input_locators = [
             (By.CSS_SELECTOR, 'input[placeholder*="sản phẩm" i]'),
@@ -203,33 +306,49 @@ class SellerCenter:
         try:
             field = self._visible(input_locators, timeout=5)
             field.clear()
-            field.send_keys(name)
-        except Exception:
-            self.driver.execute_script("document.activeElement?.blur();")
-            return
+            field.send_keys(value)
+        except Exception as error:
+            raise TimeoutException("Đang chọn sai sản phẩm") from error
 
-        normalized = " ".join(name.split())
+        normalized = value
 
         def find_exact_option(driver):
             candidates = driver.find_elements(
                 By.CSS_SELECTOR,
-                '[role="option"], [role="menuitem"], li, button'
+                'li[role="option"][data-testid^="upload-drawer-product-link-"]'
             )
             for element in candidates:
-                if element.is_displayed() and " ".join(element.text.split()) == normalized:
+                if not element.is_displayed():
+                    continue
+                name_elements = element.find_elements(By.CSS_SELECTOR, '[data-tid="m4b_overflow_text_signle"]')
+                product_name = " ".join(name_elements[0].text.split()) if name_elements else ""
+                if mode == "name" and product_name == normalized:
                     return element
+                if mode == "id":
+                    test_id = element.get_attribute("data-testid") or ""
+                    uid = element.get_attribute("data-uid") or ""
+                    stock_elements = element.find_elements(By.CSS_SELECTOR, '[class*="product-item-info-stock"]')
+                    stock_id = ""
+                    if stock_elements:
+                        stock_id = stock_elements[0].text.split("•", 1)[0].strip()
+                    if (
+                        test_id.endswith(f"-{normalized}") or
+                        uid.endswith(f":{normalized}") or
+                        stock_id == normalized
+                    ):
+                        return element
             return False
 
         try:
             option = WebDriverWait(self.driver, 5, poll_frequency=FAST_POLL).until(find_exact_option)
             option.click()
-        except Exception:
-            # Sản phẩm không tồn tại: giữ trạng thái không chọn sản phẩm.
+        except Exception as error:
+            # Không khớp chính xác ID/tên: hủy bộ chọn và dừng batch.
             try:
                 field.send_keys(Keys.ESCAPE)
             except Exception:
-                self.driver.execute_script("document.activeElement?.blur();")
-            return
+                pass
+            raise TimeoutException("Đang chọn sai sản phẩm") from error
 
     def click_next(self):
         try:
@@ -520,10 +639,10 @@ class SellerCenter:
         time.sleep(3)
         self.wait_for_video_manager(timeout=120)
 
-    def upload_one(self, file_path, account, product, description, public_profile, upload_timeout=900):
-        return self.upload_many([file_path], account, product, description, public_profile, upload_timeout)[0]
+    def upload_one(self, file_path, account, product, description, public_profile, upload_timeout=900, product_mode="name", account_mode="name"):
+        return self.upload_many([file_path], account, product, description, public_profile, upload_timeout, product_mode, account_mode)[0]
 
-    def upload_many(self, file_paths, account, product, description, public_profile, upload_timeout=900):
+    def upload_many(self, file_paths, account, product, description, public_profile, upload_timeout=900, product_mode="name", account_mode="name"):
         self.click_add()
         self.click_upload_video()
 
@@ -531,8 +650,8 @@ class SellerCenter:
             self.upload_files(file_paths)
             self.click_next()
         else:
-            self.select_account(account)
-            self.choose_product(product)
+            self.select_account(account, account_mode)
+            self.choose_product(product, product_mode)
             self.click_next()
             self.upload_files(file_paths)
 

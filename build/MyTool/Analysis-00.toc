@@ -7282,6 +7282,10 @@
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\__init__.py',
    'PYMODULE'),
+  ('stringprep',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\stringprep.py',
+   'PYMODULE'),
   ('tracemalloc',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\tracemalloc.py',
@@ -7290,17 +7294,21 @@
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\_py_abc.py',
    'PYMODULE'),
-  ('stringprep',
+  ('automation.license',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\stringprep.py',
+   'laptop\\Downloads\\tiktok-video-manager-selenium\\tiktok-video-manager-selenium\\automation\\license.py',
+   'PYMODULE'),
+  ('automation',
+   'C:\\Users\\My '
+   'laptop\\Downloads\\tiktok-video-manager-selenium\\tiktok-video-manager-selenium\\automation\\__init__.py',
    'PYMODULE'),
   ('automation.state',
    'C:\\Users\\My '
    'laptop\\Downloads\\tiktok-video-manager-selenium\\tiktok-video-manager-selenium\\automation\\state.py',
    'PYMODULE'),
-  ('automation',
+  ('automation.paths',
    'C:\\Users\\My '
-   'laptop\\Downloads\\tiktok-video-manager-selenium\\tiktok-video-manager-selenium\\automation\\__init__.py',
+   'laptop\\Downloads\\tiktok-video-manager-selenium\\tiktok-video-manager-selenium\\automation\\paths.py',
    'PYMODULE'),
   ('automation.engine',
    'C:\\Users\\My '
@@ -7421,53 +7429,53 @@
   ('api-ms-win-core-synch-l1-2-0.dll',
    'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-synch-l1-2-0.dll',
    'BINARY'),
+  ('api-ms-win-crt-runtime-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-runtime-l1-1-0.dll',
+   'BINARY'),
   ('api-ms-win-crt-utility-l1-1-0.dll',
    'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-utility-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-crt-string-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-string-l1-1-0.dll',
    'BINARY'),
   ('zlib1.dll',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\DLLs\\zlib1.dll',
    'BINARY'),
-  ('api-ms-win-crt-stdio-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-stdio-l1-1-0.dll',
+  ('api-ms-win-crt-math-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-math-l1-1-0.dll',
    'BINARY'),
-  ('VCRUNTIME140.dll',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\VCRUNTIME140.dll',
-   'BINARY'),
-  ('api-ms-win-crt-runtime-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-runtime-l1-1-0.dll',
+  ('api-ms-win-crt-convert-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-convert-l1-1-0.dll',
    'BINARY'),
   ('api-ms-win-crt-environment-l1-1-0.dll',
    'C:\\Program '
    'Files\\Java\\jdk-23\\bin\\api-ms-win-crt-environment-l1-1-0.dll',
    'BINARY'),
+  ('api-ms-win-crt-string-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-string-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-stdio-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-stdio-l1-1-0.dll',
+   'BINARY'),
   ('api-ms-win-crt-heap-l1-1-0.dll',
    'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-heap-l1-1-0.dll',
    'BINARY'),
-  ('api-ms-win-crt-math-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-math-l1-1-0.dll',
+  ('VCRUNTIME140.dll',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\VCRUNTIME140.dll',
    'BINARY'),
   ('api-ms-win-crt-time-l1-1-0.dll',
    'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-time-l1-1-0.dll',
    'BINARY'),
-  ('api-ms-win-crt-convert-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-convert-l1-1-0.dll',
+  ('api-ms-win-crt-locale-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-locale-l1-1-0.dll',
    'BINARY'),
   ('api-ms-win-crt-process-l1-1-0.dll',
    'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-process-l1-1-0.dll',
    'BINARY'),
-  ('api-ms-win-crt-locale-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-locale-l1-1-0.dll',
+  ('api-ms-win-crt-conio-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-conio-l1-1-0.dll',
    'BINARY'),
   ('api-ms-win-crt-filesystem-l1-1-0.dll',
    'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-filesystem-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-crt-conio-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-crt-conio-l1-1-0.dll',
    'BINARY'),
   ('libcrypto-3.dll',
    'C:\\Users\\My '
@@ -7484,88 +7492,88 @@
   ('ucrtbase.dll',
    'C:\\Program Files\\Java\\jdk-23\\bin\\ucrtbase.dll',
    'BINARY'),
-  ('api-ms-win-core-console-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-console-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-timezone-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-timezone-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-heap-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-heap-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-file-l2-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-file-l2-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-util-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-util-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-processthreads-l1-1-0.dll',
-   'C:\\Program '
-   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-processthreads-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-synch-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-synch-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-localization-l1-2-0.dll',
-   'C:\\Program '
-   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-localization-l1-2-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-fibers-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-fibers-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-memory-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-memory-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-sysinfo-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-sysinfo-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-handle-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-handle-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-datetime-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-datetime-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-interlocked-l1-1-0.dll',
-   'C:\\Program '
-   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-interlocked-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-debug-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-debug-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-processthreads-l1-1-1.dll',
-   'C:\\Program '
-   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-processthreads-l1-1-1.dll',
-   'BINARY'),
-  ('api-ms-win-core-profile-l1-1-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-profile-l1-1-0.dll',
-   'BINARY'),
   ('api-ms-win-core-string-l1-1-0.dll',
    'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-string-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-file-l1-2-0.dll',
-   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-file-l1-2-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-errorhandling-l1-1-0.dll',
-   'C:\\Program '
-   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-errorhandling-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-rtlsupport-l1-1-0.dll',
-   'C:\\Program '
-   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-rtlsupport-l1-1-0.dll',
-   'BINARY'),
-  ('api-ms-win-core-processenvironment-l1-1-0.dll',
-   'C:\\Program '
-   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-processenvironment-l1-1-0.dll',
    'BINARY'),
   ('api-ms-win-core-libraryloader-l1-1-0.dll',
    'C:\\Program '
    'Files\\Java\\jdk-23\\bin\\api-ms-win-core-libraryloader-l1-1-0.dll',
    'BINARY'),
+  ('api-ms-win-core-debug-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-debug-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-file-l1-2-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-file-l1-2-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-datetime-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-datetime-l1-1-0.dll',
+   'BINARY'),
   ('api-ms-win-core-file-l1-1-0.dll',
    'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-file-l1-1-0.dll',
    'BINARY'),
+  ('api-ms-win-core-heap-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-heap-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-timezone-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-timezone-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-processenvironment-l1-1-0.dll',
+   'C:\\Program '
+   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-processenvironment-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-profile-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-profile-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-synch-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-synch-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-memory-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-memory-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-util-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-util-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-rtlsupport-l1-1-0.dll',
+   'C:\\Program '
+   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-rtlsupport-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-file-l2-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-file-l2-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-errorhandling-l1-1-0.dll',
+   'C:\\Program '
+   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-errorhandling-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-fibers-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-fibers-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-processthreads-l1-1-0.dll',
+   'C:\\Program '
+   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-processthreads-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-processthreads-l1-1-1.dll',
+   'C:\\Program '
+   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-processthreads-l1-1-1.dll',
+   'BINARY'),
+  ('api-ms-win-core-localization-l1-2-0.dll',
+   'C:\\Program '
+   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-localization-l1-2-0.dll',
+   'BINARY'),
   ('api-ms-win-core-namedpipe-l1-1-0.dll',
    'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-namedpipe-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-sysinfo-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-sysinfo-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-interlocked-l1-1-0.dll',
+   'C:\\Program '
+   'Files\\Java\\jdk-23\\bin\\api-ms-win-core-interlocked-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-console-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-console-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-handle-l1-1-0.dll',
+   'C:\\Program Files\\Java\\jdk-23\\bin\\api-ms-win-core-handle-l1-1-0.dll',
    'BINARY')],
  [],
  [],
@@ -11581,41 +11589,53 @@
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\tcl\\tk8.6\\xmfbox.tcl',
    'DATA'),
-  ('selenium\\webdriver\\safari\\__init__.pyi',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\safari\\__init__.pyi',
-   'DATA'),
-  ('selenium\\webdriver\\common\\linux-x86_64\\selenium-manager',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\linux-x86_64\\selenium-manager',
-   'DATA'),
-  ('selenium\\webdriver\\edge\\__init__.pyi',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\edge\\__init__.pyi',
-   'DATA'),
-  ('selenium\\webdriver\\common\\macos\\selenium-manager',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\macos\\selenium-manager',
-   'DATA'),
-  ('selenium\\webdriver\\remote\\getAttribute.js',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\remote\\getAttribute.js',
-   'DATA'),
-  ('selenium\\webdriver\\common\\devtools\\v151\\py.typed',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\devtools\\v151\\py.typed',
-   'DATA'),
   ('selenium\\webdriver\\firefox\\webdriver_prefs.json',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\firefox\\webdriver_prefs.json',
+   'DATA'),
+  ('selenium\\webdriver\\wpewebkit\\__init__.pyi',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\wpewebkit\\__init__.pyi',
    'DATA'),
   ('selenium\\webdriver\\ie\\__init__.pyi',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\ie\\__init__.pyi',
    'DATA'),
-  ('selenium\\webdriver\\remote\\isDisplayed.js',
+  ('selenium\\webdriver\\common\\linux-x86_64\\selenium-manager',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\remote\\isDisplayed.js',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\linux-x86_64\\selenium-manager',
+   'DATA'),
+  ('selenium\\webdriver\\webkitgtk\\__init__.pyi',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\webkitgtk\\__init__.pyi',
+   'DATA'),
+  ('selenium\\webdriver\\firefox\\__init__.pyi',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\firefox\\__init__.pyi',
+   'DATA'),
+  ('selenium\\webdriver\\common\\selenium-manager.cdx.json',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\selenium-manager.cdx.json',
+   'DATA'),
+  ('selenium\\webdriver\\common\\devtools\\v151\\py.typed',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\devtools\\v151\\py.typed',
+   'DATA'),
+  ('selenium\\webdriver\\remote\\findElements.js',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\remote\\findElements.js',
+   'DATA'),
+  ('selenium\\webdriver\\edge\\__init__.pyi',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\edge\\__init__.pyi',
+   'DATA'),
+  ('selenium\\webdriver\\common\\devtools\\v153\\py.typed',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\devtools\\v153\\py.typed',
+   'DATA'),
+  ('selenium\\webdriver\\common\\selenium-manager-THIRD-PARTY-NOTICES.txt',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\selenium-manager-THIRD-PARTY-NOTICES.txt',
    'DATA'),
   ('selenium\\webdriver\\common\\devtools\\v152\\py.typed',
    'C:\\Users\\My '
@@ -11625,81 +11645,69 @@
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\chrome\\__init__.pyi',
    'DATA'),
-  ('selenium\\webdriver\\common\\linux-arm64\\selenium-manager',
+  ('selenium\\webdriver\\common\\bidi-mutation-listener.js',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\linux-arm64\\selenium-manager',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\bidi-mutation-listener.js',
+   'DATA'),
+  ('selenium\\webdriver\\safari\\__init__.pyi',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\safari\\__init__.pyi',
+   'DATA'),
+  ('selenium\\webdriver\\common\\macos\\selenium-manager',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\macos\\selenium-manager',
    'DATA'),
   ('selenium\\py.typed',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\py.typed',
    'DATA'),
-  ('selenium\\webdriver\\firefox\\__init__.pyi',
+  ('selenium\\webdriver\\common\\mutation-listener.js',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\firefox\\__init__.pyi',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\mutation-listener.js',
    'DATA'),
-  ('selenium\\webdriver\\common\\bidi-mutation-listener.js',
+  ('selenium\\webdriver\\common\\linux-arm64\\selenium-manager',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\bidi-mutation-listener.js',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\linux-arm64\\selenium-manager',
    'DATA'),
-  ('selenium\\webdriver\\remote\\findElements.js',
+  ('selenium\\webdriver\\remote\\isDisplayed.js',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\remote\\findElements.js',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\remote\\isDisplayed.js',
    'DATA'),
-  ('selenium\\webdriver\\common\\selenium-manager.cdx.json',
+  ('selenium\\webdriver\\remote\\getAttribute.js',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\selenium-manager.cdx.json',
-   'DATA'),
-  ('selenium\\webdriver\\common\\devtools\\v153\\py.typed',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\devtools\\v153\\py.typed',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\remote\\getAttribute.js',
    'DATA'),
   ('selenium\\webdriver\\__init__.pyi',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\__init__.pyi',
    'DATA'),
-  ('selenium\\webdriver\\common\\mutation-listener.js',
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\REQUESTED',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\mutation-listener.js',
-   'DATA'),
-  ('selenium\\webdriver\\webkitgtk\\__init__.pyi',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\webkitgtk\\__init__.pyi',
-   'DATA'),
-  ('selenium\\webdriver\\common\\selenium-manager-THIRD-PARTY-NOTICES.txt',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\common\\selenium-manager-THIRD-PARTY-NOTICES.txt',
-   'DATA'),
-  ('selenium\\webdriver\\wpewebkit\\__init__.pyi',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\selenium\\webdriver\\wpewebkit\\__init__.pyi',
-   'DATA'),
-  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\LICENSE',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\LICENSE',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\REQUESTED',
    'DATA'),
   ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\RECORD',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\RECORD',
    'DATA'),
-  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\METADATA',
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\WHEEL',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\METADATA',
-   'DATA'),
-  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\INSTALLER',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\INSTALLER',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\WHEEL',
    'DATA'),
   ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\top_level.txt',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\top_level.txt',
    'DATA'),
-  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\REQUESTED',
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\METADATA',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\REQUESTED',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\METADATA',
    'DATA'),
-  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\WHEEL',
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\LICENSE',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\WHEEL',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\LICENSE',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\INSTALLER',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\INSTALLER',
    'DATA'),
   ('setuptools\\_vendor\\jaraco\\text\\Lorem ipsum.txt',
    'C:\\Users\\My '
@@ -11714,37 +11722,77 @@
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\certifi\\py.typed',
    'DATA'),
-  ('wheel-0.45.1.dist-info\\WHEEL',
+  ('trio-0.34.0.dist-info\\licenses\\LICENSE.MIT',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\wheel-0.45.1.dist-info\\WHEEL',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\licenses\\LICENSE.MIT',
    'DATA'),
   ('wheel-0.45.1.dist-info\\RECORD',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\wheel-0.45.1.dist-info\\RECORD',
    'DATA'),
-  ('wheel-0.45.1.dist-info\\LICENSE.txt',
+  ('wheel-0.45.1.dist-info\\entry_points.txt',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\wheel-0.45.1.dist-info\\LICENSE.txt',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\wheel-0.45.1.dist-info\\entry_points.txt',
    'DATA'),
-  ('trio-0.34.0.dist-info\\INSTALLER',
+  ('attrs-25.1.0.dist-info\\licenses\\LICENSE',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\INSTALLER',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\attrs-25.1.0.dist-info\\licenses\\LICENSE',
+   'DATA'),
+  ('trio-0.34.0.dist-info\\entry_points.txt',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\entry_points.txt',
+   'DATA'),
+  ('trio-0.34.0.dist-info\\METADATA',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\METADATA',
+   'DATA'),
+  ('trio-0.34.0.dist-info\\top_level.txt',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\top_level.txt',
+   'DATA'),
+  ('wheel-0.45.1.dist-info\\WHEEL',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\wheel-0.45.1.dist-info\\WHEEL',
+   'DATA'),
+  ('attrs-25.1.0.dist-info\\METADATA',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\attrs-25.1.0.dist-info\\METADATA',
    'DATA'),
   ('trio-0.34.0.dist-info\\WHEEL',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\WHEEL',
    'DATA'),
+  ('trio-0.34.0.dist-info\\licenses\\LICENSE.APACHE2',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\licenses\\LICENSE.APACHE2',
+   'DATA'),
+  ('wheel-0.45.1.dist-info\\METADATA',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\wheel-0.45.1.dist-info\\METADATA',
+   'DATA'),
+  ('trio-0.34.0.dist-info\\INSTALLER',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\INSTALLER',
+   'DATA'),
   ('attrs-25.1.0.dist-info\\RECORD',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\attrs-25.1.0.dist-info\\RECORD',
+   'DATA'),
+  ('trio-0.34.0.dist-info\\licenses\\LICENSE',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\licenses\\LICENSE',
    'DATA'),
   ('wheel-0.45.1.dist-info\\INSTALLER',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\wheel-0.45.1.dist-info\\INSTALLER',
    'DATA'),
-  ('attrs-25.1.0.dist-info\\METADATA',
+  ('attrs-25.1.0.dist-info\\INSTALLER',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\attrs-25.1.0.dist-info\\METADATA',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\attrs-25.1.0.dist-info\\INSTALLER',
+   'DATA'),
+  ('wheel-0.45.1.dist-info\\LICENSE.txt',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\wheel-0.45.1.dist-info\\LICENSE.txt',
    'DATA'),
   ('trio-0.34.0.dist-info\\RECORD',
    'C:\\Users\\My '
@@ -11754,119 +11802,11 @@
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\attrs-25.1.0.dist-info\\WHEEL',
    'DATA'),
-  ('trio-0.34.0.dist-info\\entry_points.txt',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\entry_points.txt',
-   'DATA'),
-  ('wheel-0.45.1.dist-info\\METADATA',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\wheel-0.45.1.dist-info\\METADATA',
-   'DATA'),
-  ('trio-0.34.0.dist-info\\licenses\\LICENSE.MIT',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\licenses\\LICENSE.MIT',
-   'DATA'),
-  ('trio-0.34.0.dist-info\\METADATA',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\METADATA',
-   'DATA'),
-  ('attrs-25.1.0.dist-info\\INSTALLER',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\attrs-25.1.0.dist-info\\INSTALLER',
-   'DATA'),
-  ('trio-0.34.0.dist-info\\licenses\\LICENSE.APACHE2',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\licenses\\LICENSE.APACHE2',
-   'DATA'),
-  ('attrs-25.1.0.dist-info\\licenses\\LICENSE',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\attrs-25.1.0.dist-info\\licenses\\LICENSE',
-   'DATA'),
-  ('trio-0.34.0.dist-info\\top_level.txt',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\top_level.txt',
-   'DATA'),
-  ('trio-0.34.0.dist-info\\licenses\\LICENSE',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\trio-0.34.0.dist-info\\licenses\\LICENSE',
-   'DATA'),
-  ('wheel-0.45.1.dist-info\\entry_points.txt',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\wheel-0.45.1.dist-info\\entry_points.txt',
-   'DATA'),
   ('base_library.zip',
    'C:\\Users\\My '
    'laptop\\Downloads\\tiktok-video-manager-selenium\\tiktok-video-manager-selenium\\build\\MyTool\\base_library.zip',
    'DATA')],
- [('sre_parse',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\sre_parse.py',
-   'PYMODULE'),
-  ('keyword',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\keyword.py',
-   'PYMODULE'),
-  ('collections.abc',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\collections\\abc.py',
-   'PYMODULE'),
-  ('collections',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\collections\\__init__.py',
-   'PYMODULE'),
-  ('codecs',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\codecs.py',
-   'PYMODULE'),
-  ('reprlib',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\reprlib.py',
-   'PYMODULE'),
-  ('_weakrefset',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\_weakrefset.py',
-   'PYMODULE'),
-  ('operator',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\operator.py',
-   'PYMODULE'),
-  ('warnings',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\warnings.py',
-   'PYMODULE'),
-  ('weakref',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\weakref.py',
-   'PYMODULE'),
-  ('copyreg',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\copyreg.py',
-   'PYMODULE'),
-  ('types',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\types.py',
-   'PYMODULE'),
-  ('posixpath',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\posixpath.py',
-   'PYMODULE'),
-  ('traceback',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\traceback.py',
-   'PYMODULE'),
-  ('enum',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\enum.py',
-   'PYMODULE'),
-  ('abc',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\abc.py',
-   'PYMODULE'),
-  ('linecache',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\linecache.py',
-   'PYMODULE'),
-  ('stat',
+ [('stat',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\stat.py',
    'PYMODULE'),
@@ -11874,25 +11814,9 @@
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\io.py',
    'PYMODULE'),
-  ('heapq',
+  ('ntpath',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\heapq.py',
-   'PYMODULE'),
-  ('sre_constants',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\sre_constants.py',
-   'PYMODULE'),
-  ('_collections_abc',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\_collections_abc.py',
-   'PYMODULE'),
-  ('sre_compile',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\sre_compile.py',
-   'PYMODULE'),
-  ('genericpath',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\genericpath.py',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\ntpath.py',
    'PYMODULE'),
   ('encodings.zlib_codec',
    'C:\\Users\\My '
@@ -12382,14 +12306,6 @@
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\encodings\\__init__.py',
    'PYMODULE'),
-  ('os',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\os.py',
-   'PYMODULE'),
-  ('functools',
-   'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\functools.py',
-   'PYMODULE'),
   ('re._parser',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\re\\_parser.py',
@@ -12410,11 +12326,103 @@
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\re\\__init__.py',
    'PYMODULE'),
-  ('ntpath',
+  ('genericpath',
    'C:\\Users\\My '
-   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\ntpath.py',
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\genericpath.py',
+   'PYMODULE'),
+  ('sre_parse',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\sre_parse.py',
+   'PYMODULE'),
+  ('sre_constants',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\sre_constants.py',
+   'PYMODULE'),
+  ('sre_compile',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\sre_compile.py',
+   'PYMODULE'),
+  ('keyword',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\keyword.py',
+   'PYMODULE'),
+  ('os',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\os.py',
+   'PYMODULE'),
+  ('collections.abc',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\collections\\abc.py',
+   'PYMODULE'),
+  ('collections',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\collections\\__init__.py',
+   'PYMODULE'),
+  ('heapq',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\heapq.py',
+   'PYMODULE'),
+  ('copyreg',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\copyreg.py',
+   'PYMODULE'),
+  ('warnings',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\warnings.py',
+   'PYMODULE'),
+  ('_weakrefset',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\_weakrefset.py',
+   'PYMODULE'),
+  ('codecs',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\codecs.py',
+   'PYMODULE'),
+  ('traceback',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\traceback.py',
+   'PYMODULE'),
+  ('reprlib',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\reprlib.py',
+   'PYMODULE'),
+  ('operator',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\operator.py',
+   'PYMODULE'),
+  ('posixpath',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\posixpath.py',
+   'PYMODULE'),
+  ('linecache',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\linecache.py',
+   'PYMODULE'),
+  ('abc',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\abc.py',
+   'PYMODULE'),
+  ('enum',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\enum.py',
    'PYMODULE'),
   ('locale',
    'C:\\Users\\My '
    'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\locale.py',
+   'PYMODULE'),
+  ('types',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\types.py',
+   'PYMODULE'),
+  ('functools',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\functools.py',
+   'PYMODULE'),
+  ('weakref',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\weakref.py',
+   'PYMODULE'),
+  ('_collections_abc',
+   'C:\\Users\\My '
+   'laptop\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\_collections_abc.py',
    'PYMODULE')])

@@ -276,6 +276,14 @@
    'C:\\Users\\My '
    'laptop\\Downloads\\tiktok-video-manager-selenium\\tiktok-video-manager-selenium\\automation\\engine.py',
    'PYMODULE'),
+  ('automation.license',
+   'C:\\Users\\My '
+   'laptop\\Downloads\\tiktok-video-manager-selenium\\tiktok-video-manager-selenium\\automation\\license.py',
+   'PYMODULE'),
+  ('automation.paths',
+   'C:\\Users\\My '
+   'laptop\\Downloads\\tiktok-video-manager-selenium\\tiktok-video-manager-selenium\\automation\\paths.py',
+   'PYMODULE'),
   ('automation.seller_center',
    'C:\\Users\\My '
    'laptop\\Downloads\\tiktok-video-manager-selenium\\tiktok-video-manager-selenium\\automation\\seller_center.py',

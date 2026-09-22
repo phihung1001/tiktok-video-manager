@@ -27,8 +27,11 @@ class App(tk.Tk):
 
         self.folder = tk.StringVar(value=self.cfg.get("folder", ""))
         self.account = tk.StringVar(value=self.cfg.get("account_name", "HT88 - Thời trang nam"))
+        self.account_mode = tk.StringVar(value=self.cfg.get("account_mode", "name"))
         self.product = tk.StringVar(value=self.cfg.get("product_name", ""))
+        self.product_mode = tk.StringVar(value=self.cfg.get("product_mode", "name"))
         self.license_key = tk.StringVar(value=self.cfg.get("license_key", ""))
+        self.diagnostic_mode = tk.BooleanVar(value=self.cfg.get("diagnostic_mode", False))
         self.public_profile = tk.BooleanVar(value=self.cfg.get("public_profile", False))
         rules = self.cfg.get("video_rules", {})
         self.max_file_size = tk.StringVar(value=str(rules.get("max_file_size_mb", self.cfg.get("max_file_size_mb", 500))))
@@ -44,9 +47,9 @@ class App(tk.Tk):
     TRANSLATIONS = {
         "vi": {
             "subtitle": "Tự động hóa nội dung video trong Seller Center", "session": "PHIÊN UPLOAD",
-            "folder": "Thư mục video", "choose_folder": "Chọn thư mục", "account": "Tài khoản TikTok",
-            "product": "Sản phẩm (không bắt buộc)", "description": "Mô tả mặc định",
-            "public": "Hiển thị trên hồ sơ TikTok công khai", "rules": "QUY TẮC VIDEO",
+            "folder": "Thư mục video", "choose_folder": "Chọn thư mục", "account": "Tài khoản TikTok", "account_name_mode": "Tên", "account_id_mode": "ID",
+            "product": "Sản phẩm (không bắt buộc)", "product_name_mode": "Tên", "product_id_mode": "ID", "description": "Mô tả mặc định",
+            "public": "Hiển thị trên hồ sơ TikTok công khai", "diagnostic": "Diagnostic — ghi log chi tiết", "rules": "QUY TẮC VIDEO",
             "max_size": "Dung lượng tối đa (MB)", "min": "Tối thiểu (giây)", "max": "Tối đa (giây)",
             "tolerance": "Sai số tỷ lệ", "batch": "Video / batch", "start": "BẮT ĐẦU PHIÊN",
             "upload_timeout": "Timeout upload/xác thực (giây)",
@@ -59,9 +62,9 @@ class App(tk.Tk):
         },
         "en": {
             "subtitle": "Automate video content in Seller Center", "session": "UPLOAD SESSION",
-            "folder": "Video folder", "choose_folder": "Choose folder", "account": "TikTok account",
-            "product": "Product (optional)", "description": "Default description",
-            "public": "Show on public TikTok profile", "rules": "VIDEO RULES",
+            "folder": "Video folder", "choose_folder": "Choose folder", "account": "TikTok account", "account_name_mode": "Name", "account_id_mode": "ID",
+            "product": "Product (optional)", "product_name_mode": "Name", "product_id_mode": "ID", "description": "Default description",
+            "public": "Show on public TikTok profile", "diagnostic": "Diagnostic — detailed logs", "rules": "VIDEO RULES",
             "max_size": "Max size (MB)", "min": "Minimum (seconds)", "max": "Maximum (seconds)",
             "tolerance": "Aspect tolerance", "batch": "Videos / batch", "start": "START SESSION",
             "upload_timeout": "Upload/validation timeout (seconds)",
@@ -133,8 +136,21 @@ class App(tk.Tk):
 
         ttk.Label(form, text=self._t("account"), style="Field.TLabel").grid(row=2, column=0, sticky="w", padx=(0, 8))
         ttk.Label(form, text=self._t("product"), style="Field.TLabel").grid(row=2, column=1, sticky="w")
-        ttk.Entry(form, textvariable=self.account, style="Input.TEntry").grid(row=3, column=0, sticky="ew", padx=(0, 8), pady=(5, 12))
-        ttk.Entry(form, textvariable=self.product, style="Input.TEntry").grid(row=3, column=1, sticky="ew", pady=(5, 12))
+        account_controls = ttk.Frame(form, style="Card.TFrame")
+        account_controls.grid(row=3, column=0, sticky="ew", padx=(0, 8), pady=(5, 12))
+        account_controls.columnconfigure(0, weight=1)
+        ttk.Entry(account_controls, textvariable=self.account, style="Input.TEntry").grid(row=0, column=0, sticky="ew", padx=(0, 6))
+        ttk.Combobox(account_controls, textvariable=self.account_mode, values=("name", "id"), state="readonly", width=8).grid(row=0, column=1, sticky="e")
+        product_controls = ttk.Frame(form, style="Card.TFrame")
+        product_controls.grid(row=3, column=1, sticky="ew", pady=(5, 12))
+        product_controls.columnconfigure(0, weight=1)
+        ttk.Entry(product_controls, textvariable=self.product, style="Input.TEntry").grid(row=0, column=0, sticky="ew", padx=(0, 6))
+        ttk.Combobox(product_controls, textvariable=self.product_mode, values=("name", "id"), state="readonly", width=8).grid(row=0, column=1, sticky="e")
+
+        ttk.Checkbutton(
+            form, text=self._t("diagnostic"), variable=self.diagnostic_mode,
+            style="Clean.TCheckbutton"
+        ).grid(row=9, column=0, columnspan=2, sticky="w", pady=(8, 0))
 
         ttk.Label(form, text=self._t("description"), style="Field.TLabel").grid(row=4, column=0, columnspan=2, sticky="w")
         dark = self.theme.get() == "dark"
@@ -276,7 +292,10 @@ class App(tk.Tk):
         config = {
             "folder": folder,
             "account_name": account,
+            "account_mode": self.account_mode.get(),
             "product_name": self.product.get().strip(),
+            "product_mode": self.product_mode.get(),
+            "diagnostic_mode": self.diagnostic_mode.get(),
             "description": self.description.get("1.0", "end").strip(),
             "public_profile": self.public_profile.get(),
             "license_key": self.license_key.get().strip(),

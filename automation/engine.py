@@ -103,7 +103,7 @@ class AutomationEngine:
 
         try:
             self.driver = create_driver(ROOT)
-            seller = SellerCenter(self.driver, self.emit, self._wait_control)
+            seller = SellerCenter(self.driver, self.emit, self._wait_control, bool(self.config.get("diagnostic_mode", False)))
             seller.open(seller_url)
             seller.ensure_logged_in()
             seller.open_video_manager(manage_url)
@@ -121,7 +121,9 @@ class AutomationEngine:
                         [p for p, _ in batch], self.config["account_name"],
                         self.config.get("product_name", ""), self.config.get("description", ""),
                         bool(self.config.get("public_profile", False)),
-                        int(self.config.get("upload_timeout_seconds", 900))
+                        int(self.config.get("upload_timeout_seconds", 900)),
+                        self.config.get("product_mode", "name"),
+                        self.config.get("account_mode", "name")
                     )
                     for (p, meta), (status, msg) in zip(batch, statuses):
                         if status == "success":
