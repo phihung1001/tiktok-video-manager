@@ -57,6 +57,10 @@ def _save_state(state):
     _write_atomic(STATE, state)
 
 
+def save_state(state):
+    _save_state(state)
+
+
 def _key(file_path):
     return str(Path(file_path).resolve())
 
@@ -82,7 +86,10 @@ def mark_completed(file_path, size, mtime):
 
 
 def upload_status(file_path, size, mtime):
-    state = load_state()
+    return upload_status_from_state(load_state(), file_path, size, mtime)
+
+
+def upload_status_from_state(state, file_path, size, mtime):
     key = _key(file_path)
     completed = state.get("completed", {}).get(key)
     if completed and completed.get("size") == size and completed.get("mtime") == mtime:
@@ -95,3 +102,17 @@ def upload_status(file_path, size, mtime):
 
 def already_completed(file_path, size, mtime):
     return upload_status(file_path, size, mtime) == "success"
+
+
+def mark_uploading_in_state(state, file_path, size, mtime):
+    state.setdefault("uploads", {})[_key(file_path)] = {"status": "uploading", "size": size, "mtime": mtime}
+
+
+def mark_unknown_in_state(state, file_path, size, mtime, reason=""):
+    state.setdefault("uploads", {})[_key(file_path)] = {"status": "unknown", "size": size, "mtime": mtime, "reason": reason}
+
+
+def mark_completed_in_state(state, file_path, size, mtime):
+    key = _key(file_path)
+    state.setdefault("completed", {})[key] = {"size": size, "mtime": mtime}
+    state.setdefault("uploads", {}).pop(key, None)

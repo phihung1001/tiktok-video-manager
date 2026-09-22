@@ -22,7 +22,7 @@ class SellerCenter:
 
     def _diag(self, message):
         if self.diagnostic:
-            self.emit({"type": "info", "message": f"[DIAGNOSTIC] {message}"})
+            self.emit({"type": "info", "message": f"[CHI TIẾT] {message}"})
 
     def _checkpoint(self):
         self.wait_control()
@@ -98,6 +98,39 @@ class SellerCenter:
             except Exception as e:
                 last = e
         raise TimeoutException(f"Không tìm thấy phần tử. Locators={locators}") from last
+
+    def _click_fast(self, locators, timeout=5):
+        """Try all locators within one shared deadline instead of per-locator waits."""
+        deadline = time.monotonic() + timeout
+        last_error = None
+        while time.monotonic() < deadline:
+            self._checkpoint()
+            for by, value in locators:
+                try:
+                    for element in self.driver.find_elements(by, value):
+                        if not element.is_displayed() or not element.is_enabled():
+                            continue
+                        self.driver.execute_script(
+                            "arguments[0].scrollIntoView({block:'center', inline:'nearest'});", element
+                        )
+                        element.click()
+                        return element
+                except Exception as error:
+                    last_error = error
+            time.sleep(0.1)
+        raise TimeoutException(f"Không click được phần tử trong {timeout:g}s. Locators={locators}") from last_error
+
+    def _visible_fast(self, locators, timeout=5):
+        """Find the first visible element from all locators within one deadline."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            self._checkpoint()
+            for by, value in locators:
+                for element in self.driver.find_elements(by, value):
+                    if element.is_displayed() and element.is_enabled():
+                        return element
+            time.sleep(0.1)
+        raise TimeoutException(f"Không tìm thấy phần tử trong {timeout:g}s. Locators={locators}")
 
     def _click(self, locators, timeout=15):
         last = None
@@ -205,18 +238,32 @@ class SellerCenter:
                 raise TimeoutException("Đang chọn sai tài khoản quảng cáo")
 
         # Luôn mở ô tìm kiếm và nhập giá trị từ tool; không dùng lựa chọn cũ.
+        def dropdown_is_open(driver):
+            return any(
+                element.is_displayed()
+                for element in driver.find_elements(By.CSS_SELECTOR, 'li[role="option"]')
+            )
+
         try:
-            # Khi dropdown đang đóng, ô m4b_input chưa tồn tại; phải mở
-            # combobox tài khoản trước rồi mới tìm ô tìm kiếm bên trong.
-            self._click([
+            self._click_fast([
                 (By.XPATH, '//input[@data-tid="m4b_input"]/following-sibling::span[contains(@class,"input-group-suffix")]'),
             ], timeout=3)
-            self._diag("Đã click nút mở danh sách tài khoản")
         except TimeoutException:
-            self._click([
+            pass
+
+        try:
+            WebDriverWait(self.driver, 2, poll_frequency=0.1).until(dropdown_is_open)
+            self._diag("Dropdown tài khoản đã mở")
+        except TimeoutException:
+            wrapper = self._visible_fast([
                 (By.XPATH, '//input[@data-tid="m4b_input"]/ancestor::span[contains(@class,"input-group")][1]'),
             ], timeout=3)
-            self._diag("Đã click wrapper mở danh sách tài khoản")
+            self.driver.execute_script("arguments[0].click();", wrapper)
+            try:
+                WebDriverWait(self.driver, 5, poll_frequency=0.1).until(dropdown_is_open)
+                self._diag("Dropdown tài khoản đã mở bằng wrapper fallback")
+            except TimeoutException as error:
+                raise TimeoutException("Không mở được danh sách tài khoản quảng cáo") from error
         def visible_account_input(driver):
             inputs = driver.find_elements(By.CSS_SELECTOR, 'input[data-tid="m4b_input"]')
             for input_element in inputs:
@@ -225,7 +272,7 @@ class SellerCenter:
             return False
 
         try:
-            search_field = WebDriverWait(self.driver, 5, poll_frequency=FAST_POLL).until(visible_account_input)
+            search_field = WebDriverWait(self.driver, 3, poll_frequency=0.1).until(visible_account_input)
             self._diag("Đã tìm thấy input[data-tid=m4b_input]")
         except Exception as error:
             raise TimeoutException("Không tìm thấy ô tìm kiếm tài khoản quảng cáo") from error
@@ -265,7 +312,7 @@ class SellerCenter:
             raise TimeoutException("Không nhập được tên/ID tài khoản quảng cáo")
         self._diag(f"Giá trị input sau khi nhập: {search_field.get_attribute('value')!r}")
         try:
-            option = WebDriverWait(self.driver, 5, poll_frequency=FAST_POLL).until(find_exact_account)
+            option = WebDriverWait(self.driver, 3, poll_frequency=0.1).until(find_exact_account)
         except TimeoutException as error:
             self._diag("Không tìm thấy option tài khoản khớp chính xác")
             raise TimeoutException("Đang chọn sai tài khoản quảng cáo: không tìm thấy option khớp chính xác") from error
@@ -277,7 +324,7 @@ class SellerCenter:
             try:
                 # Một số bản Arco chặn native click trên wrapper nhưng vẫn
                 # nhận click tại chính phần tử option.
-                fresh_option = WebDriverWait(self.driver, 2, poll_frequency=FAST_POLL).until(find_exact_account)
+                fresh_option = WebDriverWait(self.driver, 1, poll_frequency=0.1).until(find_exact_account)
                 self.driver.execute_script("arguments[0].click();", fresh_option)
                 self._diag("Đã click option tài khoản bằng JavaScript fallback")
             except Exception as error:
@@ -289,7 +336,7 @@ class SellerCenter:
         if not value:
             return
         try:
-            self._click([
+            self._click_fast([
                 (By.CSS_SELECTOR, 'button[data-testid^="upload-drawer-product-link-"]'),
                 (By.XPATH, '//button[@data-tid="m4b_button" and .//span[normalize-space(.)="Chọn sản phẩm"]]'),
                 (By.XPATH, '//button[normalize-space(.)="Chọn sản phẩm"]'),
@@ -304,7 +351,7 @@ class SellerCenter:
         ]
         field = None
         try:
-            field = self._visible(input_locators, timeout=5)
+            field = self._visible_fast(input_locators, timeout=5)
             field.clear()
             field.send_keys(value)
         except Exception as error:
@@ -340,7 +387,7 @@ class SellerCenter:
             return False
 
         try:
-            option = WebDriverWait(self.driver, 5, poll_frequency=FAST_POLL).until(find_exact_option)
+            option = WebDriverWait(self.driver, 3, poll_frequency=0.1).until(find_exact_option)
             option.click()
         except Exception as error:
             # Không khớp chính xác ID/tên: hủy bộ chọn và dừng batch.

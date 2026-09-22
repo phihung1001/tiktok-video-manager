@@ -2,17 +2,19 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import threading
 import math
+from datetime import datetime
 from pathlib import Path
 from automation.engine import AutomationEngine
 from automation.state import load_config, save_config
 from automation.license import LicenseManager, device_id
+from automation.paths import LOGS
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("TikTok Video Manager — Selenium")
-        self.geometry("980x760")
-        self.minsize(860, 650)
+        self.geometry("1120x820")
+        self.minsize(980, 700)
         self.engine = None
         self.error_photo = None
         self.error_photo_path = None
@@ -21,6 +23,10 @@ class App(tk.Tk):
         self.error_photo_zoom = 1.0
         self.error_photo_canvas = None
         self.error_photo_zoom_label = None
+        self.session_started_at = None
+        self.session_log_lines = []
+        self.session_stats = {"success": 0, "error": 0, "invalid": 0, "info": 0}
+        self.session_log_path = None
         self.cfg = load_config()
         self.language = tk.StringVar(value=self.cfg.get("language", "vi"))
         self.theme = tk.StringVar(value=self.cfg.get("theme", "light"))
@@ -40,7 +46,7 @@ class App(tk.Tk):
         self.aspect_tolerance = tk.StringVar(value=str(rules.get("aspect_tolerance", 0.005)))
         self.batch_size = tk.StringVar(value=str(self.cfg.get("batch_size", 50)))
         self.upload_timeout = tk.StringVar(value=str(self.cfg.get("upload_timeout_seconds", 900)))
-        self.status = tk.StringVar(value=self._t("ready"))
+        self.status = tk.StringVar(value=f"✦ {self._t('ready')}")
         self.counter = tk.StringVar(value="0 / 0")
         self._build()
 
@@ -49,7 +55,7 @@ class App(tk.Tk):
             "subtitle": "Tự động hóa nội dung video trong Seller Center", "session": "PHIÊN UPLOAD",
             "folder": "Thư mục video", "choose_folder": "Chọn thư mục", "account": "Tài khoản TikTok", "account_name_mode": "Tên", "account_id_mode": "ID",
             "product": "Sản phẩm (không bắt buộc)", "product_name_mode": "Tên", "product_id_mode": "ID", "description": "Mô tả mặc định",
-            "public": "Hiển thị trên hồ sơ TikTok công khai", "diagnostic": "Diagnostic — ghi log chi tiết", "rules": "QUY TẮC VIDEO",
+            "public": "Hiển thị trên hồ sơ TikTok công khai", "rules": "QUY TẮC VIDEO",
             "max_size": "Dung lượng tối đa (MB)", "min": "Tối thiểu (giây)", "max": "Tối đa (giây)",
             "tolerance": "Sai số tỷ lệ", "batch": "Video / batch", "start": "BẮT ĐẦU PHIÊN",
             "upload_timeout": "Timeout upload/xác thực (giây)",
@@ -64,7 +70,7 @@ class App(tk.Tk):
             "subtitle": "Automate video content in Seller Center", "session": "UPLOAD SESSION",
             "folder": "Video folder", "choose_folder": "Choose folder", "account": "TikTok account", "account_name_mode": "Name", "account_id_mode": "ID",
             "product": "Product (optional)", "product_name_mode": "Name", "product_id_mode": "ID", "description": "Default description",
-            "public": "Show on public TikTok profile", "diagnostic": "Diagnostic — detailed logs", "rules": "VIDEO RULES",
+            "public": "Show on public TikTok profile", "rules": "VIDEO RULES",
             "max_size": "Max size (MB)", "min": "Minimum (seconds)", "max": "Maximum (seconds)",
             "tolerance": "Aspect tolerance", "batch": "Videos / batch", "start": "START SESSION",
             "upload_timeout": "Upload/validation timeout (seconds)",
@@ -92,6 +98,8 @@ class App(tk.Tk):
             self.log["state"] = "normal"
             self.log.insert("1.0", log_content)
             self.log["state"] = "disabled"
+        if self.session_log_lines and self.session_started_at:
+            self.export_log_btn.configure(state="normal")
 
     def _change_language(self, *_):
         save_config({"language": self.language.get(), "theme": self.theme.get()})
@@ -117,13 +125,12 @@ class App(tk.Tk):
         controls = ttk.Frame(header, style="App.TFrame")
         controls.pack(side="right", padx=(12, 12))
         ttk.Label(controls, text=self._t("language"), style="Subtitle.TLabel").grid(row=0, column=0, padx=4)
-        ttk.Combobox(controls, textvariable=self.language, values=("vi", "en"), state="readonly", width=5).grid(row=0, column=1, padx=4)
+        self._choice_switch(controls, self.language, (("VI", "vi"), ("EN", "en")), self._change_language).grid(row=0, column=1, padx=4)
         ttk.Label(controls, text=self._t("theme"), style="Subtitle.TLabel").grid(row=0, column=2, padx=4)
-        ttk.Combobox(controls, textvariable=self.theme, values=("light", "dark"), state="readonly", width=7).grid(row=0, column=3, padx=4)
-        controls.winfo_children()[1].bind("<<ComboboxSelected>>", self._change_language)
-        controls.winfo_children()[3].bind("<<ComboboxSelected>>", self._change_theme)
-        self.status_label = ttk.Label(header, textvariable=self.status, style="Status.TLabel")
+        self._choice_switch(controls, self.theme, (("Sáng", "light"), ("Tối", "dark")), self._change_theme).grid(row=0, column=3, padx=4)
+        self.status_label = ttk.Label(header, textvariable=self.status, style="StatusReady.TLabel")
         self.status_label.pack(side="right", anchor="n", ipadx=12, ipady=6)
+        ttk.Separator(outer, orient="horizontal").pack(fill="x", pady=(0, 16))
 
         form = ttk.LabelFrame(outer, text=f"  {self._t('session')}  ", padding=(16, 12), style="Card.TLabelframe")
         form.pack(fill="x", pady=(0, 12))
@@ -140,15 +147,21 @@ class App(tk.Tk):
         account_controls.grid(row=3, column=0, sticky="ew", padx=(0, 8), pady=(5, 12))
         account_controls.columnconfigure(0, weight=1)
         ttk.Entry(account_controls, textvariable=self.account, style="Input.TEntry").grid(row=0, column=0, sticky="ew", padx=(0, 6))
-        ttk.Combobox(account_controls, textvariable=self.account_mode, values=("name", "id"), state="readonly", width=8).grid(row=0, column=1, sticky="e")
+        account_mode_box = ttk.Frame(account_controls, style="Card.TFrame")
+        account_mode_box.grid(row=0, column=1, sticky="e")
+        self._mode_switch(account_mode_box, self.account_mode)
         product_controls = ttk.Frame(form, style="Card.TFrame")
         product_controls.grid(row=3, column=1, sticky="ew", pady=(5, 12))
         product_controls.columnconfigure(0, weight=1)
         ttk.Entry(product_controls, textvariable=self.product, style="Input.TEntry").grid(row=0, column=0, sticky="ew", padx=(0, 6))
-        ttk.Combobox(product_controls, textvariable=self.product_mode, values=("name", "id"), state="readonly", width=8).grid(row=0, column=1, sticky="e")
+        product_mode_box = ttk.Frame(product_controls, style="Card.TFrame")
+        product_mode_box.grid(row=0, column=1, sticky="e")
+        self._mode_switch(product_mode_box, self.product_mode)
 
         ttk.Checkbutton(
-            form, text=self._t("diagnostic"), variable=self.diagnostic_mode,
+            form,
+            text="Ghi log chi tiết" if self.language.get() == "vi" else "Detailed logging",
+            variable=self.diagnostic_mode,
             style="Clean.TCheckbutton"
         ).grid(row=9, column=0, columnspan=2, sticky="w", pady=(8, 0))
 
@@ -193,6 +206,14 @@ class App(tk.Tk):
         head = ttk.Frame(progress_box, style="Card.TFrame")
         head.pack(fill="x")
         ttk.Label(head, text=self._t("journal"), style="Section.TLabel").pack(side="left")
+        self.export_log_btn = ttk.Button(
+            head,
+            text="Xuất log phiên" if self.language.get() == "vi" else "Export session log",
+            command=self.export_log,
+            state="disabled",
+            style="Secondary.TButton",
+        )
+        self.export_log_btn.pack(side="right", padx=(10, 0))
         ttk.Button(head, text=self._t("clear"), command=self.clear_log, style="Secondary.TButton").pack(side="right", padx=(10, 0))
         ttk.Label(head, textvariable=self.counter, style="Counter.TLabel").pack(side="right")
         self.progress = ttk.Progressbar(progress_box, maximum=100, style="Accent.Horizontal.TProgressbar")
@@ -207,7 +228,13 @@ class App(tk.Tk):
         self.view_photo_btn = ttk.Button(preview_box, text=self._t("view_large"), command=self._view_error_photo, state="disabled", style="Secondary.TButton")
         self.view_photo_btn.pack(fill="x", pady=(6, 0))
 
-        self.log = tk.Text(log_frame, height=12, state="disabled", wrap="word", relief="flat", bd=0, padx=12, pady=10, bg="#111c29", fg="#d9e3ec", insertbackground="#ffffff", font=("Consolas", 10))
+        self.log = tk.Text(log_frame, height=12, state="disabled", wrap="word", relief="flat", bd=0, padx=14, pady=12, bg="#111c29", fg="#d9e3ec", insertbackground="#ffffff", font=("Cascadia Mono", 10))
+        self.log.tag_configure("SESSION", foreground="#78d5ff", font=("Cascadia Mono", 10, "bold"))
+        self.log.tag_configure("OK", foreground="#7ee2a8")
+        self.log.tag_configure("INFO", foreground="#d9e3ec")
+        self.log.tag_configure("WARN", foreground="#ffd37a")
+        self.log.tag_configure("ERROR", foreground="#ff8f8f")
+        self.log.tag_configure("SUMMARY", foreground="#bda8ff", font=("Cascadia Mono", 10, "bold"))
         self.log.pack(side="left", fill="both", expand=True)
         scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log.yview)
         scrollbar.pack(side="right", fill="y")
@@ -227,21 +254,102 @@ class App(tk.Tk):
         style.configure("Card.TFrame", background=card)
         style.configure("Card.TLabelframe", background=card, bordercolor=border, relief="solid", borderwidth=1)
         style.configure("Card.TLabelframe.Label", background=card, foreground=muted, font=("Segoe UI", 9, "bold"))
-        style.configure("Title.TLabel", background=background, foreground=foreground, font=("Segoe UI", 22, "bold"))
+        style.configure("Title.TLabel", background=background, foreground=foreground, font=("Segoe UI", 24, "bold"))
         style.configure("Subtitle.TLabel", background=background, foreground=muted, font=("Segoe UI", 10))
-        style.configure("Status.TLabel", background="#214b3a" if dark else "#e7f5ee", foreground="#8ee0b3" if dark else "#1d7a4d", font=("Segoe UI", 10, "bold"))
+        style.configure("StatusReady.TLabel", background="#214b3a" if dark else "#e7f5ee", foreground="#8ee0b3" if dark else "#1d7a4d", font=("Segoe UI", 10, "bold"), padding=(16, 8), borderwidth=1, relief="solid")
+        style.configure("StatusRunning.TLabel", background="#123e50" if dark else "#e6f6fb", foreground="#78d5ff" if dark else "#087ea4", font=("Segoe UI", 10, "bold"), padding=(16, 8), borderwidth=1, relief="solid")
+        style.configure("StatusDone.TLabel", background="#3d315c" if dark else "#f0ebff", foreground="#d2c2ff" if dark else "#6346b5", font=("Segoe UI", 10, "bold"), padding=(16, 8), borderwidth=1, relief="solid")
+        style.configure("StatusWarning.TLabel", background="#513d22" if dark else "#fff5df", foreground="#ffd37a" if dark else "#986b00", font=("Segoe UI", 10, "bold"), padding=(16, 8), borderwidth=1, relief="solid")
         style.configure("Field.TLabel", background=card, foreground=muted, font=("Segoe UI", 9, "bold"))
-        style.configure("Section.TLabel", background=card, foreground=foreground, font=("Segoe UI", 10, "bold"))
-        style.configure("Counter.TLabel", background=card, foreground="#65c6ed", font=("Segoe UI", 10, "bold"))
+        style.configure("Section.TLabel", background=card, foreground=foreground, font=("Segoe UI", 11, "bold"))
+        style.configure("Counter.TLabel", background=card, foreground="#159ac5" if not dark else "#65c6ed", font=("Segoe UI", 10, "bold"))
         style.configure("Input.TEntry", padding=(9, 7), fieldbackground=input_bg, foreground=foreground, bordercolor=border, lightcolor=border, darkcolor=border)
+        style.configure("App.TCombobox", padding=(6, 5), fieldbackground=input_bg, background=input_bg, foreground=foreground, bordercolor=border, lightcolor=border, darkcolor=border, arrowcolor=foreground)
+        style.map("App.TCombobox", fieldbackground=[("readonly", input_bg), ("focus", input_bg)], foreground=[("readonly", foreground)], selectbackground=[("readonly", input_bg)], selectforeground=[("readonly", foreground)])
+        mode_bg = "#223442" if dark else "#edf2f5"
+        mode_active = "#087ea4" if dark else "#159ac5"
+        mode_active_hover = "#066783" if dark else "#087ea4"
+        style.configure("Mode.TRadiobutton", padding=(11, 6), background=mode_bg, foreground=foreground, borderwidth=0, relief="flat", font=("Segoe UI", 9, "bold"))
+        style.map("Mode.TRadiobutton", background=[("selected", mode_active), ("active", mode_active_hover)], foreground=[("selected", "#ffffff"), ("active", "#ffffff")])
         style.configure("Clean.TCheckbutton", background=card, foreground=foreground, font=("Segoe UI", 9))
-        style.configure("Accent.TButton", padding=(14, 10), background="#087ea4", foreground="#ffffff", font=("Segoe UI", 10, "bold"), borderwidth=0)
+        style.configure("Accent.TButton", padding=(16, 11), background="#087ea4", foreground="#ffffff", font=("Segoe UI", 10, "bold"), borderwidth=0)
         style.map("Accent.TButton", background=[("active", "#066783"), ("disabled", "#a8c5d0")])
         style.configure("Secondary.TButton", padding=(12, 9), background="#2b3d4b" if dark else "#e9eef2", foreground=foreground, font=("Segoe UI", 9, "bold"), borderwidth=0)
         style.map("Secondary.TButton", background=[("active", "#385365" if dark else "#d8e2e9"), ("disabled", "#263743" if dark else "#eef2f4")])
         style.configure("Danger.TButton", padding=(12, 9), background="#512b2d" if dark else "#f9e8e7", foreground="#ffaaa7" if dark else "#b23a35", font=("Segoe UI", 9, "bold"), borderwidth=0)
         style.map("Danger.TButton", background=[("active", "#68383a" if dark else "#f3d3d1"), ("disabled", "#382528" if dark else "#f5eeee")])
         style.configure("Accent.Horizontal.TProgressbar", troughcolor="#30424e" if dark else "#e6edf2", background="#22a7d5", bordercolor="#30424e" if dark else "#e6edf2", lightcolor="#22a7d5", darkcolor="#22a7d5", thickness=8)
+
+    def _choice_switch(self, parent, variable, choices, callback):
+        dark = self.theme.get() == "dark"
+        frame = tk.Frame(parent, bg="#101820" if dark else "#f3f6f8", highlightthickness=0)
+        buttons = []
+        normal_bg = "#223442" if dark else "#edf2f5"
+        normal_fg = "#e7eef4" if dark else "#526170"
+        selected_bg = "#087ea4" if dark else "#159ac5"
+
+        def refresh():
+            for button, value in buttons:
+                selected = variable.get() == value
+                button.configure(
+                    bg=selected_bg if selected else normal_bg,
+                    fg="#ffffff" if selected else normal_fg,
+                    activebackground="#066783" if selected else ("#304c5d" if dark else "#d8e5eb"),
+                    activeforeground="#ffffff" if selected else normal_fg,
+                )
+
+        for label, value in choices:
+            button = tk.Button(
+                frame,
+                text=label,
+                command=lambda selected=value: (variable.set(selected), callback()),
+                relief="flat",
+                bd=0,
+                padx=9,
+                pady=4,
+                cursor="hand2",
+                font=("Segoe UI", 9, "bold"),
+                highlightthickness=0,
+            )
+            button.pack(side="left")
+            buttons.append((button, value))
+        refresh()
+        return frame
+
+    def _mode_switch(self, parent, variable):
+        dark = self.theme.get() == "dark"
+        buttons = []
+        normal_bg = "#223442" if dark else "#edf2f5"
+        normal_fg = "#e7eef4" if dark else "#526170"
+        selected_bg = "#087ea4" if dark else "#159ac5"
+
+        def refresh(*_):
+            for button, value in buttons:
+                selected = variable.get() == value
+                button.configure(
+                    bg=selected_bg if selected else normal_bg,
+                    fg="#ffffff" if selected else normal_fg,
+                    activebackground="#066783" if selected else ("#304c5d" if dark else "#d8e5eb"),
+                    activeforeground="#ffffff" if selected else normal_fg,
+                )
+
+        for label, value in (("Tên", "name"), ("ID", "id")):
+            button = tk.Button(
+                parent,
+                text=label,
+                command=lambda selected=value: variable.set(selected),
+                relief="flat",
+                bd=0,
+                padx=12,
+                pady=5,
+                cursor="hand2",
+                font=("Segoe UI", 9, "bold"),
+                highlightthickness=0,
+            )
+            button.pack(side="left")
+            buttons.append((button, value))
+        variable.trace_add("write", refresh)
+        refresh()
 
     def choose_folder(self):
         folder = filedialog.askdirectory()
@@ -252,6 +360,35 @@ class App(tk.Tk):
         self.log["state"] = "normal"
         self.log.delete("1.0", "end")
         self.log["state"] = "disabled"
+
+    def export_log(self):
+        if not self.session_log_lines:
+            messagebox.showinfo("Log", "Chưa có log của phiên để xuất.")
+            return
+        started = self.session_started_at or datetime.now()
+        target = filedialog.asksaveasfilename(
+            title="Lưu log phiên",
+            defaultextension=".txt",
+            initialfile=f"session-log-{started.strftime('%Y%m%d-%H%M%S')}.txt",
+            filetypes=(("Log text", "*.txt"), ("All files", "*.*")),
+        )
+        if not target:
+            return
+        try:
+            Path(target).write_text("\n".join(self.session_log_lines) + "\n", encoding="utf-8")
+            self._log("INFO", f"Đã xuất log phiên: {Path(target).name}", record=False)
+        except OSError as error:
+            messagebox.showerror("Log", f"Không thể xuất log: {error}")
+
+    def _write_session_log(self):
+        if not self.session_log_lines or not self.session_started_at:
+            return
+        try:
+            LOGS.mkdir(parents=True, exist_ok=True)
+            self.session_log_path = LOGS / f"session-{self.session_started_at.strftime('%Y%m%d-%H%M%S')}.txt"
+            self.session_log_path.write_text("\n".join(self.session_log_lines) + "\n", encoding="utf-8")
+        except OSError:
+            self.session_log_path = None
 
     def start(self):
         folder = self.folder.get().strip()
@@ -319,7 +456,14 @@ class App(tk.Tk):
         self.view_photo_btn.configure(state="disabled")
         self.progress["value"] = 0
         self.counter.set("0 / 0")
-        self._log("INFO", "Bắt đầu phiên automation...")
+        self.session_started_at = datetime.now()
+        self.session_log_lines = []
+        self.session_stats = {"success": 0, "error": 0, "invalid": 0, "info": 0}
+        self.session_log_path = None
+        self.export_log_btn.configure(state="disabled")
+        self._log("SESSION", "Bắt đầu phiên automation")
+        self._log("INFO", f"Thư mục: {Path(folder).name}")
+        self._log("INFO", "Đang kiểm tra video và chuẩn bị hàng đợi")
 
         self.engine = AutomationEngine(config, self.emit)
         threading.Thread(target=self._run_engine, daemon=True).start()
@@ -335,28 +479,42 @@ class App(tk.Tk):
     def pause(self):
         if self.engine:
             self.engine.pause()
-            self.status.set("Paused" if self.language.get() == "en" else "Đã tạm dừng")
+            self._set_status("Paused" if self.language.get() == "en" else "Đã tạm dừng")
             self.pause_btn["state"] = "disabled"
             self.resume_btn["state"] = "normal"
 
     def resume(self):
         if self.engine:
             self.engine.resume()
-            self.status.set(self._t("running"))
+            self._set_status(self._t("running"))
             self.pause_btn["state"] = "normal"
             self.resume_btn["state"] = "disabled"
 
     def stop(self):
         if self.engine:
             self.engine.stop()
-            self.status.set("Stopping..." if self.language.get() == "en" else "Đang dừng...")
+            self._set_status("Stopping..." if self.language.get() == "en" else "Đang dừng...")
 
     def _set_running(self, running):
         self.start_btn["state"] = "disabled" if running else "normal"
         self.pause_btn["state"] = "normal" if running else "disabled"
         self.resume_btn["state"] = "disabled"
         self.stop_btn["state"] = "normal" if running else "disabled"
-        self.status.set(self._t("running") if running else self._t("ready"))
+        self._set_status(self._t("running") if running else self._t("ready"))
+
+    def _set_status(self, text):
+        lowered = text.lower()
+        if any(word in lowered for word in ("chạy", "running")):
+            icon, style = "●", "StatusRunning.TLabel"
+        elif any(word in lowered for word in ("hoàn tất", "completed")):
+            icon, style = "✓", "StatusDone.TLabel"
+        elif any(word in lowered for word in ("dừng", "dừng", "paused", "stopping")):
+            icon, style = "!", "StatusWarning.TLabel"
+        else:
+            icon, style = "✦", "StatusReady.TLabel"
+        self.status.set(f"{icon} {text}")
+        if hasattr(self, "status_label"):
+            self.status_label.configure(style=style)
 
     def emit(self, event):
         self.after(0, lambda: self._handle_event(event))
@@ -369,7 +527,11 @@ class App(tk.Tk):
             self.progress["value"] = e["percent"]
             self.counter.set(f"{e['done']} / {e['total']}")
         elif t == "result":
-            self._log(e.get("status","INFO").upper(), f"{e['file']} — {e['message']}")
+            status = e.get("status", "info").lower()
+            level = "WARN" if status == "invalid" else "ERROR" if status == "error" else "OK" if status == "success" else "INFO"
+            self.session_stats[status] = self.session_stats.get(status, 0) + 1
+            self._log(level, f"{e['file']} — {e['message']}")
+            return
         elif t == "info":
             self._log("INFO", e["message"])
         elif t == "error":
@@ -377,14 +539,22 @@ class App(tk.Tk):
         elif t == "screenshot":
             self._show_error_photo(e.get("path"), e.get("message", self._t("screenshot_ready")))
         elif t == "finished":
-            self.status.set(self._t("stopped") if e.get("stopped") else self._t("done"))
-            self._log("INFO", "Session stopped." if e.get("stopped") and self.language.get() == "en" else "Phiên đã dừng." if e.get("stopped") else "Queue completed." if self.language.get() == "en" else "Đã xử lý xong hàng đợi.")
+            self._set_status(self._t("stopped") if e.get("stopped") else self._t("done"))
+            self._log("WARN" if e.get("stopped") else "INFO", "Phiên đã dừng theo yêu cầu người dùng" if e.get("stopped") else "Đã xử lý xong hàng đợi")
+            self._log("SUMMARY", "Tổng kết: thành công {success}, lỗi {error}, bỏ qua {invalid}".format(**self.session_stats))
+            self._write_session_log()
+            self.export_log_btn.configure(state="normal" if self.session_log_lines else "disabled")
+            return
 
-    def _log(self, level, msg):
+    def _log(self, level, msg, record=True):
+        line = f"{datetime.now().strftime('%H:%M:%S')}  [{level}]  {msg}"
         self.log["state"] = "normal"
-        self.log.insert("end", f"[{level}] {msg}\n")
+        tag = level if level in {"SESSION", "OK", "INFO", "WARN", "ERROR", "SUMMARY"} else "INFO"
+        self.log.insert("end", line + "\n", tag)
         self.log.see("end")
         self.log["state"] = "disabled"
+        if record:
+            self.session_log_lines.append(line)
 
     def _show_error_photo(self, path, caption):
         if not path or not Path(path).is_file():
